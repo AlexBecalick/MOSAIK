@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Thu Apr 17 15:06:30 2025
-
-@author: niuyiren
+Yiren Niu and Anthony Baptista
 """
 
 #Loading required libraries
