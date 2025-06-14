@@ -23,11 +23,19 @@ In the following section, we will guide you through the process of using MOSAIK 
 ### Numerical materials include in MOSAIK
 
 - [Napari v0.4.17](https://github.com/napari/napari/releases/tag/v0.4.17) + CosMx plugin (`napari/napari_CosMx-0.4.17.3-py3-none-any.whl`)
-- CosMx/Xenium conda environment (`env/cosmx.yml`)
-- CosMx folder formating and composition images codes (`tools`)
-- Xenium explanation folder (`tools/Xenium_data.xlsx`)
-- CosMx/Xenium Reader (`src/reader/`)
-- CosMx/Xenium QC scripts (`src/qc/`)
+- CosMx/Xenium conda environment (`env/..`)
+- CosMx/Xenium Reader (`src/reader/..`)
+- CosMx/Xenium QC scripts (`src/qc/..`)
+- 
+#### Tools
+
+- ``export_tiff.py``: This script converts CosMx spatial transcriptomics image data from Zarr format to multiscale OME-TIFF. It supports selecting specific imaging channels, optionally includes segmentation label edge maps, and embeds spatial metadata such as pixel size and contrast limits. Channels are grouped into batches, processed with Dask for scalability, and written to OME-TIFF using tifffile, producing a tiled, compressed, pyramid image stack.
+- ``make_composite_revised_image.py``: This script processes layered 2D morphology TIFF images by extracting individual channels, converting them to 8-bit grayscale, applying optional autocontrast, and generating colorized composite images. It validates user input for clipping percentage and output format, ensures required folders are created, and handles exceptions for folder conflicts or invalid input. The script supports JPG, PNG, and TIFF formats, and creates both raw and enhanced composite outputs using predefined color mappings.
+- ``remove_slice_tiff.py``: This script removes a specific slice (index 4) from each multi-layer .TIF file in a folder and saves the modified files to an output directory.
+- ``CellLabels.sh``: This bash script copies all CellLabels *.tif files from subdirectories into a single destination folder, extracts compressed .csv.gz files, and renames any *-polygons.csv files by replacing the hyphen with an underscore for consistency.
+- ``renaming_composite.sh``: This bash script renames files in a specified directory by removing _composite or _composite_autocontrast from filenames and replacing the first occurrence of F with CellComposite_F, then outputs the changes made.
+- ``Xenium_data.xlsx``: Xlsx table that explain each xenium data output and which one is important for the visualisation, analysis, and re-preprocessing.
+
 
 ### MOSAIK workflow
 
