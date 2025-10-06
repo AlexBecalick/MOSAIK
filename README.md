@@ -82,7 +82,16 @@ When the code finishes running, it generates multiple folders inside the `Morpho
 
 9. When the `flatFiles` folder is ready, i.e., enriched with the `CellComposite`/`Morphology2D` folder and the `CellLabels` folder, you can either import and create the `.zarr` object with the Python code `src/qc/CosMx_QC.py`.
 10. Create the Napari visualisation (see the section **How to use Napari**).
-11. The Napari visualization can be used to proceed with the QC using the same code as the one used for the `.zarr` object creation (`src/qc/CosMx_QC.py`), especially for defining the different sample FOVs.
+11. The Napari visualisation can be used to proceed with the QC using the same code as the one used for the `.zarr` object creation (`src/qc/CosMx_QC.py`), especially for defining the different sample FOVs.
+12. You can create and/or import the `.zarr` object with the Python code `src/qc/CosMx_QC.py`.
+13. ❗The code `src/qc/CosMx_QC.py` **needs** to call functions from the following libraries: 
+
+- `src/qc/sbf.py`  
+- `src/reader/cosmx.py`  
+- `src/reader/_constants.py`  
+
+We recommend copying these files into the same folder where `src/qc/CosMx_QC.py` is located.
+
 
 ⚠️ To run `CosMx_qc.py` without any issues, we recommend creating a conda environment based on the YAML file located in the `env` folder, and then running the following command in a terminal:
   ```bash
@@ -94,8 +103,16 @@ When the code finishes running, it generates multiple folders inside the `Morpho
 
 1. Export the data from the Xenium instrument, the folder contains a lot of files that are described in `tools/Xenium_data.xlsx` file of the GitHub repository.
 2. Exploring the data with [Xenium Explorer](https://www.10xgenomics.com/products/xenium-analysis)
-3. You can import and create the `.zarr` object with the Python code `src/qc/Xenium_QC.py`
-4. When the `.zarr` object is created, you can proceed with the QC using the same code as before (`src/qc/Xenium_QC.py`).
+3. You can create and/or import the `.zarr` object with the Python code `src/qc/Xenium_QC.py`.
+4. ❗The code `src/qc/Xenium_QC.py` **needs** to call functions from the following libraries:  
+
+- `src/qc/sbf.py`  
+- `src/reader/xenium.py`  
+- `src/reader/_constants.py`  
+
+We recommend copying these files into the same folder where `src/qc/Xenium_QC.py` is located.
+
+5. When the `.zarr` object is created, you can proceed with the QC using the same code as before (`src/qc/Xenium_QC.py`).
 
 ⚠️ To run `Xenium_QC.py` without any issues, we recommend creating a conda environment based on the YAML file located in the `env` folder, and then running the following command in a terminal:
   ```bash
