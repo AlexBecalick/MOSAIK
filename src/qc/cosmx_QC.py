@@ -6,13 +6,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import os
+path = "PathToFolder"
+os.chdir(path)
 import warnings
 import logging
 logging.basicConfig(level=logging.WARNING)
 warnings.filterwarnings("ignore")
-path = r"/Volumes/Extreme SSD/QuarterBrain"
-os.chdir(path)
-
 from spatialdata.transformations import Affine, set_transformation
 import matplotlib.pyplot as plt
 from sbf import visualise_fov
@@ -26,16 +25,18 @@ import cosmx
 # =============================================================================
 # Paths & Data Loading
 # =============================================================================
-zarr_path = "QuarterBrain.zarr"
-slide = "/flatFiles"
+zarr_path = "ZarrName.zarr"
+slide = "/flatFiles/SLIDENAME"
 
 flat_file_dir_slide = path + slide
 
 metafile = [item for item in os.listdir(flat_file_dir_slide) if 'metadata_file' in item][0]
 metafile_df = pd.read_csv(flat_file_dir_slide+ '/' + metafile)
 
-fovfile = [item for item in os.listdir(flat_file_dir_slide) if 'fov_positions_file' in item][0]
+fovfile = [item for item in os.listdir(
+    flat_file_dir_slide) if 'fov_positions_file' in item][0]
 fovfile_df = pd.read_csv(flat_file_dir_slide + '/' + fovfile)
+
 
 polygon = [item for item in os.listdir(flat_file_dir_slide) if 'polygons' in item][0]
 polygon_df = pd.read_csv(flat_file_dir_slide + '/' + polygon)
@@ -43,24 +44,27 @@ polygon_df = pd.read_csv(flat_file_dir_slide + '/' + polygon)
 first_run = user_input = input("Is it the first run (0: False, 1: True): ")
 
 if first_run == '1':
-    
+    columns_sub = ['fov','Area','AspectRatio','CenterX_local_px','CenterY_local_px','Width',
+    'Height','Mean.PanCK','Max.PanCK','Mean.G','Max.G','Mean.Membrane','Max.Membrane',
+    'Mean.CD45','Max.CD45','Mean.DAPI','Max.DAPI','cell_ID','assay_type','version',
+    'Run_Tissue_name','Panel','cellSegmentationSetId','cellSegmentationSetName',
+    'slide_ID','CenterX_global_px','CenterY_global_px','unassignedTranscripts']
+
+    metafile_df = pd.read_csv(flat_file_dir_slide+ '/' + metafile)
+    metafile_df = metafile_df[columns_sub]
+    metafile_df.to_csv(path + slide + '/' + metafile, index = False)
+
     fovfile_df = pd.read_csv(flat_file_dir_slide + '/' + fovfile)
     fovfile_df = fovfile_df.rename({'FOV': 'fov'}, axis = 'columns')
     fovfile_df.to_csv(path + slide + '/' + fovfile, index = False)
-    
+
     polygon_df = pd.read_csv(flat_file_dir_slide + '/' + polygon)
     polygon_df = polygon_df.rename({'cellID': 'cell_ID'}, axis = 'columns')
-    if 'cell' not in polygon_df.keys():
-        polygon_df['cell'] = "c_" + polygon_df['fov'].astype(str) + '_' + polygon_df['cell_ID'].astype(str)
     polygon_df.to_csv(path + slide + '/' + polygon, index = False)
-    
-        
-    # Depending on the version of AtoMx, you may need to flip the images
-    # to correctly align cells and transcripts. In the latest version of AtoMx,
-    # this issue has been fixed. However, for the publicly available dataset we used,
-    # flipping is still required, so we set the argument `flip_image` to True.
-    sdata = cosmx.cosmx(path + slide, flip_image = True)
-    sdata.write(zarr_path)    
+
+sdata = cosmx.cosmx(flat_file_dir_slide, type_image = 'composite')
+sdata.write(zarr_path)
+
 
 # =============================================================================
 # Data Loading for QC
@@ -73,7 +77,9 @@ print(adata.obs.keys())
 # # Should be defined manually with the help of the Napari visualisation
 # TMAGLACIER1
 # =============================================================================
-sample1 = list(range(1, 66 + 1))
+sample1 = list(range(1, 9 + 1))
+sample1 = list(range(10, 66 + 1))
+
 
 samples_list = [sample1]
     
