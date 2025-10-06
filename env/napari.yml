@@ -1,0 +1,42 @@
+name: napari-test
+channels:
+  - conda-forge
+  - defaults
+  - napari/label/bundle_tools
+dependencies:
+  - python=3.9
+  - napari=0.4.17
+  - pip
+  - typing-extensions=4.4.0
+  - napari-console=0.0.6
+  - napari-menu=0.4.17
+  - napari-plugin-engine=0.2.0
+  - napari-svg=0.1.6
+  - pyqt>=5.15
+  - qt-main>=5.15
+  - pyside2>=5.15
+  - superqt
+  - qtpy
+  - qdarkstyle
+  - vispy
+  # Optional plugins (add or remove as needed)
+  - pip:
+      - superqt>=0.7
+      - spyder==6.0.7
+      - spyder-kernels
+      - pyqtwebengine
+      - qstylizer
+      - qtawesome
+      - watchdog
+      - rtree
+      - h5py
+      - vaex-core
+      - vaex-hdf5
+      - python-lsp-server
+      - black
+      - flake8
+      - yapf
+      - rope
+
+variables:
+  QT_API: pyside2
