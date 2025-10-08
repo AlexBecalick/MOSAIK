@@ -124,7 +124,8 @@ We recommend copying these files into the same folder where `src/qc/Xenium_QC.py
 1. Install [Napari 0.4.17](https://github.com/napari/napari/releases/tag/v0.4.17).
 
 
-⚠️ We recommend creating a conda environment based on the YAML (napari.yml) file located in the `env` folder. This environment will install napari 0.4.17 and deopendies de=uring the creation of the environment. To create the corresponding conda environment you can run the following command in a terminal:
+⚠️ We recommend creating a conda environment based on the YAML file (`napari.yml`) located in the `env` folder. This environment will install **Napari 0.4.17** and all required dependencies during its creation.  To create the corresponding conda environment, run the following command in a terminal:
+
   ```bash
    conda env create -f napari.yml
    ```
