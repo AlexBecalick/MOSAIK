@@ -122,24 +122,31 @@ We recommend copying these files into the same folder where `src/qc/Xenium_QC.py
 ## 🔬 How to use Napari 
 
 1. Install [Napari 0.4.17](https://github.com/napari/napari/releases/tag/v0.4.17).
-2. Launch Napari and open the IPython console (symbol "**>_**").
-3. Install the CosMx plugin:
+
+
+⚠️ We recommend creating a conda environment based on the YAML (napari.yml) file located in the `env` folder. This environment will install napari 0.4.17 and deopendies de=uring the creation of the environment. To create the corresponding conda environment you can run the following command in a terminal:
+  ```bash
+   conda env create -f napari.yml
+   ```
+2. Launch Napari in terminal with the previous conda environment created.
+3. Open the IPython console (symbol "**>_**").
+4. Install the CosMx plugin:
 
     ```bash
     pip install napari_CosMx-0.4.17.3-py3-none-any.whl
     ```
 
-4. Drag the `napari_cosmx_launcher` folder into the Napari window. You can download it from [this link](https://emckclac-my.sharepoint.com/:f:/g/personal/k2481276_kcl_ac_uk/EkO8xJFpX8ZBv_lq-5zRHQQBjcoTOE8PONclhqUfj20zSw?e=WtIiKX)
-5. In the right panel, select the parent folder that contains your CosMx run.
-6. Choose the output folder.
-7. Click the "**Stitch**" button.
-8. Wait for the stitching to finish (the only indicator is the loading cursor).
-9. After stitching, the output directory will contain:
+5. Drag the `napari_cosmx_launcher` folder into the Napari window. You can download it from [this link](https://emckclac-my.sharepoint.com/:f:/g/personal/k2481276_kcl_ac_uk/EkO8xJFpX8ZBv_lq-5zRHQQBjcoTOE8PONclhqUfj20zSw?e=WtIiKX)
+6. In the right panel, select the parent folder that contains your CosMx run.
+7. Choose the output folder.
+8. Click the "**Stitch**" button.
+9. Wait for the stitching to finish (the only indicator is the loading cursor).
+10. After stitching, the output directory will contain:
    - an `images` folder with all FOVs
    - a `targets.hdf5` file with the transcripts
-10. Restart Napari 0.4.17 and drag the project folder into the window.
+11. Restart Napari 0.4.17 and drag the project folder into the window.
 
-11. Once loaded, use the panels to explore:
+12. Once loaded, use the panels to explore:
 
     - **Morphology Images**: Add fluorescent channels.
     - **RNA Transcripts**: Add transcripts.
