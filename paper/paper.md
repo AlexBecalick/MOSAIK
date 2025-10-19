@@ -90,6 +90,13 @@ Furthermore, newly developed tools within the group will be directly integrated 
 
 The tools that will be natively integrated into MOSAIK include segmentation methods based on SAM, as well as a multimodal integration approach that combines transcriptomics and spatial information to generate a more robust latent representation. The current modalities under consideration include H\&E, Akoya PhenoCycler, IMC, and metallomics data.
 
+# Author Contributions
+
+- Anthony Baptista: Developed the MOSAIK workflow and wrote the manuscript.
+- Rosamond Nuamah: Provided feedback on the spatial transcriptomics data and highlighted the experimental requirements to ensure the numerical workflow aligns with the raw data. 
+- Anita Grigoriadis and Ciro Chiappini: Lead the King's College London Spatial Biology Facility, where this work was conducted, and proofread the manuscript.
+
+
 # Acknowledgements
 Anthony Baptista, and Anita Grigoriadis acknowledge support from the CRUK City of London Centre Award [CTRQQR-2021/100004]. Anthony Baptista, Rosamond Nuamah, Ciro Chiappini, and Anita Grigoriadis acknowledge support from MRC [MR/X012476/1]. 
 
