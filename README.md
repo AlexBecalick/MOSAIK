@@ -6,6 +6,10 @@
 
 # MOSAIK
 
+Please cite the following paper if you use MOSAIK in your research: [MOSAIK: Multi-Origin Spatial Transcriptomics Analysis and Integration Kit](https://arxiv.org/abs/2505.11384)
+
+A.Baptista et al., arXiv:2505.11384  (2025)
+
 ## 📝 Introduction  
 <p align="center">
   <img src="images/logo.png" width="150px">
