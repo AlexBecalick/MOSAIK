@@ -1,0 +1,11 @@
+/* Top header background */
+.wy-side-nav-search {
+    background-color: #DDEEFF;  /* matches sidebar */
+}
+
+/* Toctree captions in RTD sidebar */
+.wy-menu-vertical .caption {
+    color: #DDEEFF !important;             /* optional text color */
+}
+
+
