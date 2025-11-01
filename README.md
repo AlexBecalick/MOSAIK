@@ -6,7 +6,7 @@
 
 # MOSAIK
 
-[![Documentation Status](https://readthedocs.org/projects/mosaik-documentation/badge/?version=latest)](https://app.readthedocs.org/api/v2/webhook/mosaik-docs/312762/)
+[![Documentation Status](https://readthedocs.org/projects/mosaik-docs/badge/?version=latest)](https://mosaik-docs.readthedocs.io/en/latest/?badge=latest)
 
 
 Please cite the following paper if you use MOSAIK in your research: [A.Baptista et al., MOSAIK: Multi-Origin Spatial Transcriptomics Analysis and Integration Kit, arXiv:2505.11384 (2025)](https://arxiv.org/abs/2505.11384)
