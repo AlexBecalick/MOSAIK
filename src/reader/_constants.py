@@ -66,6 +66,7 @@ class XeniumKeys(ModeEnum):
     MORPHOLOGY_FOCUS_FILE = "morphology_focus.ome.tif"
     # from version 2.0.0
     MORPHOLOGY_FOCUS_DIR = "morphology_focus"
+    
     MORPHOLOGY_FOCUS_CHANNEL_IMAGE = "morphology_focus_{:04}.ome.tif"
     # from analysis_summary.html > Image QC of https://www.10xgenomics.com/datasets/preview-data-ffpe-human-lung-cancer-with-xenium-multimodal-cell-segmentation-1-standard
     MORPHOLOGY_FOCUS_CHANNEL_0 = "DAPI"  # nuclear
@@ -73,6 +74,14 @@ class XeniumKeys(ModeEnum):
     MORPHOLOGY_FOCUS_CHANNEL_2 = "18S"  # interior - RNA
     MORPHOLOGY_FOCUS_CHANNEL_3 = "AlphaSMA/Vimentin"  # interior - protein
 
+    MORPHOLOGY_FOCUS_CHANNEL_IMAGE_UPDATE = "ch{:04}_{}.ome.tif"
+    # from analysis_summary.html > Image QC of https://www.10xgenomics.com/datasets/preview-data-ffpe-human-lung-cancer-with-xenium-multimodal-cell-segmentation-1-standard
+    MORPHOLOGY_FOCUS_CHANNEL_UPDATE_0 = "dapi"  # nuclear
+    MORPHOLOGY_FOCUS_CHANNEL_UPDATE_1 = "atp1a1_cd45_e-cadherin"  # boundary
+    MORPHOLOGY_FOCUS_CHANNEL_UPDATE_2 = "18s"  # interior - RNA
+    MORPHOLOGY_FOCUS_CHANNEL_UPDATE_3 = "alphasma_vimentin"  # interior - protein
+    
+    
     # post-xenium images
     ALIGNED_IF_IMAGE_SUFFIX = "if_image.ome.tif"
     ALIGNED_HE_IMAGE_SUFFIX = "he_image.ome.tif"

@@ -32,7 +32,7 @@ from spatialdata.models import Image2DModel, Labels2DModel, PointsModel, ShapesM
 from spatialdata.transformations.transformations import Affine, Identity, Scale
 from xarray import DataArray, DataTree
 
-from spatialdata_io._constants._constants import XeniumKeys
+from _constants import XeniumKeys
 from spatialdata_io._docs import inject_docs
 from spatialdata_io._utils import deprecation_alias
 from spatialdata_io.readers._utils._read_10x_h5 import _read_10x_h5
@@ -42,6 +42,7 @@ from spatialdata_io.readers._utils._utils import _initialize_raster_models_kwarg
 @inject_docs(xx=XeniumKeys)
 def xenium(
     path: str | Path,
+    update,
     *,
     cells_boundaries: bool = True,
     nucleus_boundaries: bool = True,
@@ -244,34 +245,74 @@ def xenium(
     else:
         
         if morphology_focus:
-            morphology_focus_dir = path / XeniumKeys.MORPHOLOGY_FOCUS_DIR
-            files = {f for f in os.listdir(morphology_focus_dir) if f.endswith(".ome.tif") and not f.startswith("._")}
-            
-            if len(files) not in [1, 4]:
-                raise ValueError(
-                    "Expected 1 (no segmentation kit) or 4 (segmentation kit) files in the morphology focus directory, "
-                    f"found {len(files)}: {files}")
+            if update == False:
+                morphology_focus_dir = path / XeniumKeys.MORPHOLOGY_FOCUS_DIR
+                files = {f for f in os.listdir(morphology_focus_dir) if f.endswith(".ome.tif") and not f.startswith("._")}
                 
-            if files != {XeniumKeys.MORPHOLOGY_FOCUS_CHANNEL_IMAGE.value.format(i) for i in range(len(files))}:
-                raise ValueError(
-                    "Expected files in the morphology focus directory to be named as "
-                    f"{XeniumKeys.MORPHOLOGY_FOCUS_CHANNEL_IMAGE.value.format(0)} to "
-                    f"{XeniumKeys.MORPHOLOGY_FOCUS_CHANNEL_IMAGE.value.format(len(files) - 1)}, found {files}")
+                if len(files) not in [1, 4]:
+                    raise ValueError(
+                        "Expected 1 (no segmentation kit) or 4 (segmentation kit) files in the morphology focus directory, "
+                        f"found {len(files)}: {files}")
+                    
+                if files != {XeniumKeys.MORPHOLOGY_FOCUS_CHANNEL_IMAGE.value.format(i) for i in range(len(files))}:
+                    raise ValueError(
+                        "Expected files in the morphology focus directory to be named as "
+                        f"{XeniumKeys.MORPHOLOGY_FOCUS_CHANNEL_IMAGE.value.format(0)} to "
+                        f"{XeniumKeys.MORPHOLOGY_FOCUS_CHANNEL_IMAGE.value.format(len(files) - 1)}, found {files}")
+                    
+                if len(files) == 1:
+                    channel_names = {
+                        0: XeniumKeys.MORPHOLOGY_FOCUS_CHANNEL_0.value}
+                else:
+                    channel_names = {
+                        0: XeniumKeys.MORPHOLOGY_FOCUS_CHANNEL_0.value,
+                        1: XeniumKeys.MORPHOLOGY_FOCUS_CHANNEL_1.value,
+                        2: XeniumKeys.MORPHOLOGY_FOCUS_CHANNEL_2.value,
+                        3: XeniumKeys.MORPHOLOGY_FOCUS_CHANNEL_3.value}
+                # this reads the scale 0 for all the 1 or 4 channels (the other files are parsed automatically)
+                # dask.image.imread will call tifffile.imread which will give a warning saying that reading multi-file
+                # pyramids is not supported; since we are reading the full scale image and reconstructing the pyramid, we
+                # can ignore this
                 
-            if len(files) == 1:
-                channel_names = {
-                    0: XeniumKeys.MORPHOLOGY_FOCUS_CHANNEL_0.value}
             else:
-                channel_names = {
-                    0: XeniumKeys.MORPHOLOGY_FOCUS_CHANNEL_0.value,
-                    1: XeniumKeys.MORPHOLOGY_FOCUS_CHANNEL_1.value,
-                    2: XeniumKeys.MORPHOLOGY_FOCUS_CHANNEL_2.value,
-                    3: XeniumKeys.MORPHOLOGY_FOCUS_CHANNEL_3.value}
-            # this reads the scale 0 for all the 1 or 4 channels (the other files are parsed automatically)
-            # dask.image.imread will call tifffile.imread which will give a warning saying that reading multi-file
-            # pyramids is not supported; since we are reading the full scale image and reconstructing the pyramid, we
-            # can ignore this
+                morphology_focus_dir = path / XeniumKeys.MORPHOLOGY_FOCUS_DIR
+                files = {f for f in os.listdir(morphology_focus_dir) if f.endswith(".ome.tif") and not f.startswith("._")}
+                channel_names_map = {
+                    0: XeniumKeys.MORPHOLOGY_FOCUS_CHANNEL_UPDATE_0.value,
+                    1: XeniumKeys.MORPHOLOGY_FOCUS_CHANNEL_UPDATE_1.value,
+                    2: XeniumKeys.MORPHOLOGY_FOCUS_CHANNEL_UPDATE_2.value,
+                    3: XeniumKeys.MORPHOLOGY_FOCUS_CHANNEL_UPDATE_3.value
+                }
 
+                if len(files) not in [1, 4]:
+                    raise ValueError(
+                        "Expected 1 (no segmentation kit) or 4 (segmentation kit) files in the morphology focus directory, "
+                        f"found {len(files)}: {files}")
+                    
+                if files != {
+                    XeniumKeys.MORPHOLOGY_FOCUS_CHANNEL_IMAGE_UPDATE.value.format(i, channel_names_map[i]) 
+                    for i in range(len(files))}:
+                    raise ValueError(
+                        "Expected files in the morphology focus directory to be named as "
+                        f"{XeniumKeys.MORPHOLOGY_FOCUS_CHANNEL_IMAGE_UPDATE.value.format(0)} to "
+                        f"{XeniumKeys.MORPHOLOGY_FOCUS_CHANNEL_IMAGE_UPDATE.value.format(len(files) - 1)}, found {files}")
+                    
+                if len(files) == 1:
+                    channel_names = {
+                        0: XeniumKeys.MORPHOLOGY_FOCUS_CHANNEL_UPDATE_0.value}
+                else:
+                    channel_names = {
+                        0: XeniumKeys.MORPHOLOGY_FOCUS_CHANNEL_IMAGE_UPDATE.value.format(0, channel_names_map[0]),
+                        1: XeniumKeys.MORPHOLOGY_FOCUS_CHANNEL_IMAGE_UPDATE.value.format(0, channel_names_map[1]),
+                        2: XeniumKeys.MORPHOLOGY_FOCUS_CHANNEL_IMAGE_UPDATE.value.format(0, channel_names_map[2]),
+                        3: XeniumKeys.MORPHOLOGY_FOCUS_CHANNEL_IMAGE_UPDATE.value.format(0, channel_names_map[3])}
+                    print("Channel names:")
+                    print(channel_names)
+                # this reads the scale 0 for all the 1 or 4 channels (the other files are parsed automatically)
+                # dask.image.imread will call tifffile.imread which will give a warning saying that reading multi-file
+                # pyramids is not supported; since we are reading the full scale image and reconstructing the pyramid, we
+                # can ignore this
+                
             class IgnoreSpecificMessage(logging.Filter):
                 """A logging filter that suppresses specific tifffile warnings.
             
@@ -308,11 +349,27 @@ def xenium(
                 "c_coords" not in image_models_kwargs
             ), "The channel names for the morphology focus images are handled internally"
             image_models_kwargs["c_coords"] = list(channel_names.values())
-            images["morphology_focus"] = _get_images(
-                morphology_focus_dir,
-                XeniumKeys.MORPHOLOGY_FOCUS_CHANNEL_IMAGE.format(0),
-                imread_kwargs,
-                image_models_kwargs)
+            if update == False:
+                images["morphology_focus"] = _get_images(
+                    morphology_focus_dir,
+                    XeniumKeys.MORPHOLOGY_FOCUS_CHANNEL_IMAGE.format(0),
+                    imread_kwargs,
+                    image_models_kwargs)
+            
+            else: 
+                channel_names_map = {
+                    0: XeniumKeys.MORPHOLOGY_FOCUS_CHANNEL_UPDATE_0.value,
+                    1: XeniumKeys.MORPHOLOGY_FOCUS_CHANNEL_UPDATE_1.value,
+                    2: XeniumKeys.MORPHOLOGY_FOCUS_CHANNEL_UPDATE_2.value,
+                    3: XeniumKeys.MORPHOLOGY_FOCUS_CHANNEL_UPDATE_3.value
+                }
+                
+                # For channel 0
+                images["morphology_focus"] = _get_images(
+                    morphology_focus_dir,
+                    XeniumKeys.MORPHOLOGY_FOCUS_CHANNEL_IMAGE_UPDATE.value.format(0, channel_names_map[0]),
+                    imread_kwargs,
+                    image_models_kwargs)
             
             del image_models_kwargs["c_coords"]
             logger.removeFilter(IgnoreSpecificMessage())
