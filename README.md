@@ -27,7 +27,7 @@ MOSAIK is built to adapt to the latest versions of key platform providers, inclu
 In the following section, we will guide you through the process of using MOSAIK for data integration and analysis.
 
 
-### Numerical materials include in MOSAIK
+### Numerical materials included in MOSAIK
 
 - [Napari v0.4.17](https://github.com/napari/napari/releases/tag/v0.4.17) + CosMx plugin (`napari/napari_CosMx-0.4.17.3-py3-none-any.whl`)
 - CosMx/Xenium conda environment (`env/..`)
