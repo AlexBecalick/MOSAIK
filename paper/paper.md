@@ -9,6 +9,8 @@ authors:
   - name: Anthony Baptista
     orcid: 0000-0002-8514-0250
     affiliation: "1, 2"
+  - name: Diane Cruiziat 
+    affiliation: "1"
   - name: Rosamond Nuamah
     orcid: 0000-0002-6376-6922
     affiliation: "1"
