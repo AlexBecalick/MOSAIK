@@ -194,6 +194,21 @@ For tutorials, see the [spatialdata-napari documentation](https://spatialdata.sc
 
 ![SpatialData Object](images/spatialdata_object.png)
 
+## Resegmentation
+
+⭐ **New: FOV Stitching and Resegmentation with MOSAIK**
+
+MOSAIK now supports stitching of CosMx Field of Views (FOVs) and provides comprehensive resegmentation capabilities for both CosMx and Xenium samples. The enhanced pipeline includes:
+
+- **FOV Stitching**: Seamlessly combine multiple fields of view into a single spatial dataset for whole-sample analysis
+- **Image Preprocessing**: Intelligent channel selection and rescaling to optimize image quality for segmentation
+- **Cellpose-based Segmentation**: Leverages Cellpose with customizable parameters (flow threshold, cell probability threshold, tile overlap) for accurate cell boundary detection
+- **Artifact Removal**: Applies geometric feature-based quality control metrics to automatically filter out segmentation artifacts
+- **SpatialData Integration**: Automatically updates your spatial transcriptomics data with improved segmentation masks
+
+The workflow dramatically improves segmentation quality compared to default methods (see figure), enabling more accurate downstream spatial analysis and cell-level quantification.
+
+**Key Functions**: `stitching()`, `Resegmentation()`, `qc_metric()`, `qc_plot()`, `filter_norm()`
 
 # Downstream analysis
 
