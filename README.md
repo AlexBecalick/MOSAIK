@@ -208,6 +208,8 @@ MOSAIK now supports stitching of CosMx Field of Views (FOVs) and provides compre
 
 The workflow dramatically improves segmentation quality compared to default methods (see figure), enabling more accurate downstream spatial analysis and cell-level quantification.
 
+![Workflow](images/segmentation.png)
+
 **Key Functions**: `stitching()`, `Resegmentation()`, `qc_metric()`, `qc_plot()`, `filter_norm()`
 
 # Downstream analysis
