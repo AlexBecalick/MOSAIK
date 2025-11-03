@@ -14,6 +14,10 @@ Please cite the following paper if you use MOSAIK in your research: [A.Baptista 
 ⭐ New: FOVs Stitching and Resegmentation with MOSAIK
 Stitch CosMx Field of Views (FOVs) and resegment your samples (CosMx and Xenium support) using MOSAIK's enhanced pipeline. The workflow preprocesses images, applies Cellpose-SAM for segmentation, and uses geometric features to automatically remove artifacts. These features can be found in ``src/resegmentation`` folder.
 
+**Update**: The Xenium reader has been updated in order to be aligned with the new naming of the channels in the morphology_focus folder. This update solve the following error:
+```diff
+- ValueError: Expected files in the morphology focus directory to be named as morphology_focus_0000.ome.tif to morphology_focus_0003.ome.tif, found {'ch0000_dapi.ome.tif', 'ch0001_atp1a1_cd45_e-cadherin.ome.tif', 'ch0003_alphasma_vimentin.ome.tif', 'ch0002_18s.ome.tif'}
+```
 
 ## 📝 Introduction  
 <p align="center">
