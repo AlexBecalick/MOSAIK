@@ -31,7 +31,7 @@ Install the required Python packages:
 
 .. code-block:: bash
 
-   pip install cellpose-sam spatialdata geopandas anndata scikit-image numpy pandas matplotlib
+   pip install cellpose spatialdata geopandas anndata scikit-image numpy pandas matplotlib
 
 Optional GPU Support
 --------------------
@@ -41,7 +41,7 @@ If you have a compatible NVIDIA GPU (Linux/Windows) or an Apple Silicon Mac (M1â
 .. code-block:: bash
 
    pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
-   pip install cellpose-sam[all]
+   pip install cellpose[all]
 
 .. code-block:: python
    
