@@ -310,8 +310,8 @@ This work is licensed under:
 
 You may share/adapt for any purpose, including commercially, with proper credit and no added restrictions.
 
-## ✨ Contributors
+## ✨ Contributors & Contacts
 
-|<img src="https://api.dicebear.com/9.x/rings/svg?seed=Anthony%20Baptista" width="100px">   |
+|<img src="https://api.dicebear.com/9.x/rings/svg?seed=Anthony%20Baptista" width="100px">  |
 |------------------------------------------------------------------------------------------|
-| Anthony Baptista                                                                         |
+| Anthony Baptista (anthony.baptista@kcl.ac.uk)                                            |
