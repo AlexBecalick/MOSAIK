@@ -49,6 +49,7 @@ data. The pipeline leverages the `Cellpose-SAM Python library <https://cellpose.
    segmentation
    post_segmentation
    outputs
+   usage_examples
    api_reference
 
 
