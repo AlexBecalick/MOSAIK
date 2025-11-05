@@ -10,7 +10,7 @@ Export the data from the AtoMx platform, which should include:
 
 .. note::
 
-   In AtoMx v1.4, all ``RawFiles`` are included; in earlier versions, ``Spot`` files are excluded.
+   In AtoMx v1.4, all ``RawFiles`` are included; in later versions, ``Spot`` files are excluded.
 
 
 **2. Unzip files**
