@@ -52,7 +52,6 @@ data. The pipeline leverages the `Cellpose-SAM Python library <https://cellpose.
    usage_examples
    modules
    api_reference
-   software
 
 
 .. toctree::
