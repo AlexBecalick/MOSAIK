@@ -1,4 +1,0 @@
-Contributing
-============
-
-Content goes here.
