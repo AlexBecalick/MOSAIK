@@ -157,25 +157,3 @@ For complete workflows including stitching and quality control:
     qc_plot(adata_S1, sdata_S1)
     filter_norm(adata_S1)
 
-
-Module Changes Summary
-----------------------
-
-The following modules have been renamed:
-
-* ``resegmentation.py`` → ``reseg.py``
-* ``resegmentation_tools.py`` → ``reseg_tools.py``
-* ``resegmentation_script.py`` → ``reseg_script.py``
-* ``resegmentation_tools_script.py`` (deprecated)
-
-All functionality remains the same; only the import statements need to be updated:
-
-.. code-block:: python
-
-    # Old imports (deprecated)
-    from resegmentation import Resegmentation
-    from resegmentation_tools import check_gpu, run_cellpose_SAM
-
-    # New imports
-    from reseg import Resegmentation
-    from reseg_tools import check_gpu, run_cellpose_SAM
