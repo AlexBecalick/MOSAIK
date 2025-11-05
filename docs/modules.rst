@@ -1,17 +1,17 @@
 segmentation_package
 ====================
 
-.. automodule:: reseg_tools.py
+.. automodule:: reseg_tools
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: reseg.py
+.. automodule:: reseg
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: reseg_script.py
+.. automodule:: reseg_script
    :members:
    :undoc-members:
    :show-inheritance:
