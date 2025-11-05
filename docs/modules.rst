@@ -1,9 +1,18 @@
 segmentation_package
 ====================
 
-.. toctree::
-   :maxdepth: 4
+.. automodule:: reseg_tools.py
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
-   reseg_tools.py
-   reseg.py
-   reseg_script.py
+.. automodule:: reseg.py
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+.. automodule:: reseg_script.py
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
