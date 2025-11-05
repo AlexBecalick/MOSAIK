@@ -4,6 +4,6 @@ segmentation_package
 .. toctree::
    :maxdepth: 4
 
-   reseg_tools
-   reseg
-   reseg_script
+   reseg_tools.py
+   reseg.py
+   reseg_script.py
