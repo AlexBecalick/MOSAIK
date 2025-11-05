@@ -16,11 +16,3 @@ reseg
    :members:
    :undoc-members:
    :show-inheritance:
-
-reseg_script
-------------
-
-.. automodule:: reseg_script
-   :members:
-   :undoc-members:
-   :show-inheritance:
