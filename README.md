@@ -56,9 +56,10 @@ In the following section, we will guide you through the process of using MOSAIK 
 
 ### CosMx
 
-1. Export the data from the AtoMx platform. The export should include all `flatFiles` and the following `RawFiles`  
-   - `Morphology2D`  
-   - `Misc`  
+1. Export the data from the AtoMx platform. The export should include all `flatFiles` and `DecodedFiles` (Formerly referred to as RawFiles during export.) 
+   - `AnalysisResults`  
+   - `CellStatsDir` (which include `Morphology2D` folder)
+   - `RunSummary`  
    *(In AtoMx v1.4, this includes all RawFiles. In earlier versions, it includes all RawFiles **except** the `Spot files`.)*
 
 2. Unzip all `.csv.gz` files in the flatFiles folder. In a terminal, if your working directory is `flatFiles`, run:
