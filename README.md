@@ -151,7 +151,7 @@ We recommend copying these files into the same folder where `src/qc/Xenium_QC.py
     ```
 
 5. Drag the `napari_cosmx_launcher` folder into the Napari window. You can download it from [this link](https://emckclac-my.sharepoint.com/:f:/g/personal/k2481276_kcl_ac_uk/EkO8xJFpX8ZBv_lq-5zRHQQBjcoTOE8PONclhqUfj20zSw?e=WtIiKX)
-6. In the right panel, select the parent folder that contains your CosMx run.
+6. In the right panel, select the parent folder that contains your CosMx raw data, this folder should include the following folders: AnalysisResults, CellStatsDir, RunSummary.
 7. Choose the output folder.
 8. Click the "**Stitch**" button.
 9. Wait for the stitching to finish (the only indicator is the loading cursor).
