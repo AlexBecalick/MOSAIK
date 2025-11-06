@@ -2,7 +2,6 @@ name: napari-test
 channels:
   - conda-forge
   - defaults
-  - napari/label/bundle_tools
 dependencies:
   - python=3.9
   - napari=0.4.17
