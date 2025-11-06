@@ -6,10 +6,15 @@
 import os
 import warnings
 import logging
+
+# Set the working directory where your data and results are located.
+# Replace "/path/to/project/" with the absolute or relative path to your project folder.
+path = "/path/to/project/"
+os.chdir(path)
+
+# Silence unnecessary warnings and set logging to show only warnings or errors.
 logging.basicConfig(level=logging.WARNING)
 warnings.filterwarnings("ignore")
-path = r"/Volumes/Extreme SSD"
-os.chdir(path)
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -28,9 +33,16 @@ import xenium
 # ========================
 # Paths & Data Loading
 # ========================
-path = r"/Volumes/Extreme SSD/Xenium_Skin"
-zarr_path = "Xenium_Skin.zarr"
-os.chdir(path)
+# zarr_path:
+#   Path to the Zarr-formatted spatial dataset from the current path (established before). 
+#   If the code is running for the first time you should give a name to the file 
+#   and how to access from current path
+zarr_path = "ZarrName.zarr"
+
+# slide:
+#   Path to the slide-specific directory (often a flattened structure used for annotations,
+#   cell labels, or per-slide data). This typically corresponds to a single TMA or slide.
+slide = "/flatFiles/SLIDENAME"
 
 first_run = user_input = input("Is it the first run (0: False, 1: True): ")
 
