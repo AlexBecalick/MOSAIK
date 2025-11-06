@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # Source root directory (adjust as needed)
-SOURCE_DIR="/Volumes/Extreme SSD/CosMx/SBF_C018/RawFiles/TMA2/20250319_181208_S2/CellStatsDir/"
+SOURCE_DIR="/path/to/project/RawFiles/TMAID/RunID/CellStatsDir/"
 
 # Destination directory (where you want to copy the files)
-DEST_DIR="/Volumes/Extreme SSD/CosMx/SBF_C018/flatFiles/TMA2/CellLabels"
+DEST_DIR="/path/to/project/flatFiles/TMAID/CellLabels/"
 
 # Create destination if it doesn't exist
 mkdir -p "$DEST_DIR"
@@ -22,10 +22,24 @@ PARENT_DIR="$(dirname "$DEST_DIR")"
 # Change to the parent directory
 cd "$PARENT_DIR" || exit
 
-gunzip *.csv.gz
+# Check for .gz files and unzip if any are found
+if ls *.gz 1> /dev/null 2>&1; then
+    echo "Found compressed .gz files — unzipping..."
+    gunzip *.gz
+    echo "Unzipping complete."
+else
+    echo "No .gz files found — skipping unzipping step."
+fi
 
-for f in *-polygons.csv; do
-    mv "$f" "${f%-polygons.csv}_polygons.csv"
-done
-
-echo "polygons file renamed"
+# Check for '-polygons.csv' files and rename if any are found
+if ls *-polygons.csv 1> /dev/null 2>&1; then
+    echo "Found '-polygons.csv' files — renaming..."
+    for f in *-polygons.csv; do
+        new_name="${f%-polygons.csv}_polygons.csv"
+        mv "$f" "$new_name"
+        echo "Renamed: $f → $new_name"
+    done
+    echo "Renaming complete."
+else
+    echo "No '-polygons.csv' files found — skipping renaming step."
+fi
