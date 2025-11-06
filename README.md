@@ -61,32 +61,27 @@ In the following section, we will guide you through the process of using MOSAIK 
    - `CellStatsDir` (which include `Morphology2D` folder)
    - `RunSummary`  
    *(In AtoMx v1.4, this includes all RawFiles. In earlier versions, it includes all RawFiles **except** the `Spot files`.)*
-
-2. Unzip all `.csv.gz` files in the flatFiles folder. In a terminal, if your working directory is `flatFiles`, run:
-
-   ```bash
-   gunzip *.csv.gz
    
-3. Now, the raw images should be included in the flatFiles folder. To do this, you can use the bash script `CellLabels.sh` available in the `tools/` folder of the GitHub repository.
+2. Now, the raw images should be included in the flatFiles folder. To do this, you can use the bash script `CellLabels.sh` available in the `tools/` folder of the GitHub repository.
 
-4. Firstly, you have to change the `SOURCE_DIR` and the `DEST_DIR` variables in the script to match your own directories.
+3. Firstly, you have to change the `SOURCE_DIR` and the `DEST_DIR` variables in the script to match your own directories.
 
-5. Secondly, make the script executable and run it using the following commands:
+4. Secondly, make the script executable and run it using the following commands:
 
    ```bash
    chmod +x CellLabels.sh
    ./CellLabels.sh
    ```
 
-6. This will create a `CellLabels` folder inside the flatFiles folder.
+5. This will create a `CellLabels` folder inside the flatFiles folder.
 
-7. The last folder to include is the `CellComposite` folder from `Morphology2D`. Depending on your choice:
+6. The last folder to include is the `CellComposite` folder from `Morphology2D`. Depending on your choice:
    - If you opt for a composite `.jpg` image (`CellComposite`)
    - Or for raw multichannel `.TIF` images (approximately 200 times larger than composite images)
 
    Both folders are located in the `RawFiles` directory, under the subfolder named `CellStatsDir`.
 
-8. If the `CellComposite` folder is not present or is unsatisfactory, a new one can be created using the Python script by specifying the folder that contains the TIF images:
+7. If the `CellComposite` folder is not present or is unsatisfactory, a new one can be created using the Python script by specifying the folder that contains the TIF images:
 
    ```bash
    python tools/make_composite_revised_image.py
@@ -94,11 +89,11 @@ In the following section, we will guide you through the process of using MOSAIK 
 When the code finishes running, it generates multiple folders inside the `Morphology2D` directory. The most relevant folders are either `composite` or `composite_autocontrast`. Whichever one you choose, you need to rename it to `CellComposite`, and move into the flatFiles folder. You can use the `renaming_composite.sh` script to rename the images in a suitable and consistent format. This script is in the `tools/` folder.
 
 
-9. When the `flatFiles` folder is ready, i.e., enriched with the `CellComposite`/`Morphology2D` folder and the `CellLabels` folder, you can either import and create the `.zarr` object with the Python code `src/qc/CosMx_QC.py`.
-10. Create the Napari visualisation (see the section **How to use Napari**).
-11. The Napari visualisation can be used to proceed with the QC using the same code as the one used for the `.zarr` object creation (`src/qc/CosMx_QC.py`), especially for defining the different sample FOVs.
-12. You can create and/or import the `.zarr` object with the Python code `src/qc/CosMx_QC.py`.
-13. ❗The code `src/qc/CosMx_QC.py` **needs** to call functions from the following libraries: 
+8. When the `flatFiles` folder is ready, i.e., enriched with the `CellComposite`/`Morphology2D` folder and the `CellLabels` folder, you can either import and create the `.zarr` object with the Python code `src/qc/CosMx_QC.py`.
+9. Create the Napari visualisation (see the section **How to use Napari**).
+10. The Napari visualisation can be used to proceed with the QC using the same code as the one used for the `.zarr` object creation (`src/qc/CosMx_QC.py`), especially for defining the different sample FOVs.
+11. You can create and/or import the `.zarr` object with the Python code `src/qc/CosMx_QC.py`.
+12. ❗The code `src/qc/CosMx_QC.py` **needs** to call functions from the following libraries: 
 
 - `src/qc/sbf.py`  
 - `src/reader/cosmx.py`  
