@@ -77,17 +77,16 @@ In the following section, we will guide you through the process of using MOSAIK 
 
 6. The last folder to include is the `CellComposite` folder from `Morphology2D`. Depending on your choice:
    - If you opt for a composite `.jpg` image (`CellComposite`)
-   - Or for raw multichannel `.TIF` images (approximately 200 times larger than composite images)
+   - Or for raw multichannel `.TIF` images (`Morphology2D`, approximately 200 times larger than composite images)
 
    Both folders are located in the `RawFiles` directory, under the subfolder named `CellStatsDir`.
 
-7. If the `CellComposite` folder is not present or is unsatisfactory, a new one can be created using the Python script by specifying the folder that contains the TIF images:
+7. If the `CellComposite` folder is not present or is unsatisfactory, and you don't want to use raw multichannel `.TIF` images (`Morphology2D`), a new one can be created using the Python script by specifying the folder that contains the TIF images:
 
    ```bash
    python tools/make_composite_revised_image.py
    ```
-When the code finishes running, it generates multiple folders inside the `Morphology2D` directory. The most relevant folders are either `composite` or `composite_autocontrast`. Whichever one you choose, you need to rename it to `CellComposite`, and move into the flatFiles folder. You can use the `renaming_composite.sh` script to rename the images in a suitable and consistent format. This script is in the `tools/` folder.
-
+When the code finishes running, it generates multiple folders inside the `Morphology2D` directory. The relevant folders are either `composite` or `composite_autocontrast`. Whichever one you choose, you need to rename it to `CellComposite`, and move into the flatFiles folder. You can use the `renaming_composite.sh` script to rename the images in a suitable and consistent format. This script is in the `tools/` folder.
 
 8. When the `flatFiles` folder is ready, i.e., enriched with the `CellComposite`/`Morphology2D` folder and the `CellLabels` folder, you can either import and create the `.zarr` object with the Python code `src/qc/CosMx_QC.py`.
 9. Create the Napari visualisation (see the section **How to use Napari**).
