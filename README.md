@@ -37,7 +37,7 @@ In the following section, we will guide you through the process of using MOSAIK 
 
 - [Napari v0.4.17](https://github.com/napari/napari/releases/tag/v0.4.17) + CosMx plugin (`napari/napari_CosMx-0.4.17.3-py3-none-any.whl`)
 - CosMx/Xenium conda environment (`env/..`)
-- CosMx/Xenium Reader (`src/reader/..`)
+- CosMx/Xenium Reader (`src/qc/..`)
 - CosMx/Xenium QC scripts (`src/qc/..`)
 - Tools
   - ``export_tiff.py``: This script converts CosMx spatial transcriptomics image data from Zarr format to multiscale OME-TIFF. It supports selecting specific imaging channels, optionally includes segmentation label edge maps, and embeds spatial metadata such as pixel size and contrast limits. Channels are grouped into batches, processed with Dask for scalability, and written to OME-TIFF using tifffile, producing a tiled, compressed, pyramid image stack.
@@ -95,8 +95,8 @@ When the code finishes running, it generates multiple folders inside the `Morpho
 12. ❗The code `src/qc/cosMx_QC.py` **needs** to call functions from the following libraries: 
 
 - `src/qc/sbf.py`  
-- `src/reader/cosmx.py`  
-- `src/reader/_constants.py`  
+- `src/qc/cosmx.py`  
+- `src/qc/_constants.py`  
 
 We recommend copying these files into the same folder where `src/qc/cosMx_QC.py` is located.
 
@@ -115,8 +115,8 @@ We recommend copying these files into the same folder where `src/qc/cosMx_QC.py`
 4. ❗The code `src/qc/xenium_QC.py` **needs** to call functions from the following libraries:  
 
 - `src/qc/sbf.py`  
-- `src/reader/xenium.py`  
-- `src/reader/_constants.py`  
+- `src/qc/xenium.py`  
+- `src/qc/_constants.py`  
 
 We recommend copying these files into the same folder where `src/qc/xenium_QC.py` is located.
 
