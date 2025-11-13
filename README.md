@@ -98,9 +98,6 @@ When the code finishes running, it generates multiple folders inside the `Morpho
 - `src/qc/cosmx.py`  
 - `src/qc/_constants.py`  
 
-We recommend copying these files into the same folder where `src/qc/cosmx_QC.py` is located.
-
-
 ⚠️ To run `cosmx_QC.py` without any issues, we recommend creating a conda environment based on the YAML file located in the `env` folder, and then running the following command in a terminal:
   ```bash
    conda env create -f cosmx.yml
@@ -117,8 +114,6 @@ We recommend copying these files into the same folder where `src/qc/cosmx_QC.py`
 - `src/qc/sbf.py`  
 - `src/qc/xenium.py`  
 - `src/qc/_constants.py`  
-
-We recommend copying these files into the same folder where `src/qc/xenium_QC.py` is located.
 
 5. When the `.zarr` object is created, you can proceed with the QC using the same code as before (`src/qc/xenium_QC.py`).
 
