@@ -88,20 +88,20 @@ In the following section, we will guide you through the process of using MOSAIK 
    ```
 When the code finishes running, it generates multiple folders inside the `Morphology2D` directory. The relevant folders are either `composite` or `composite_autocontrast`. Whichever one you choose, you need to rename it to `CellComposite`, and move into the flatFiles folder. You can use the `renaming_composite.sh` script to rename the images in a suitable and consistent format. This script is in the `tools/` folder.
 
-8. When the `flatFiles` folder is ready, i.e., enriched with the `CellComposite`/`Morphology2D` folder and the `CellLabels` folder, you can either import and create the `.zarr` object with the Python code `src/qc/cosMx_QC.py`.
+8. When the `flatFiles` folder is ready, i.e., enriched with the `CellComposite`/`Morphology2D` folder and the `CellLabels` folder, you can either import and create the `.zarr` object with the Python code `src/qc/cosmx_QC.py`.
 9. Create the Napari visualisation (see the section **How to use Napari**).
-10. The Napari visualisation can be used to proceed with the QC using the same code as the one used for the `.zarr` object creation (`src/qc/cosMx_QC.py`), especially for defining the different sample FOVs.
-11. You can create and/or import the `.zarr` object with the Python code `src/qc/cosMx_QC.py`.
-12. ❗The code `src/qc/cosMx_QC.py` **needs** to call functions from the following libraries: 
+10. The Napari visualisation can be used to proceed with the QC using the same code as the one used for the `.zarr` object creation (`src/qc/cosmx_QC.py`), especially for defining the different sample FOVs.
+11. You can create and/or import the `.zarr` object with the Python code `src/qc/cosmx_QC.py`.
+12. ❗The code `src/qc/cosmx_QC.py` **needs** to call functions from the following libraries: 
 
 - `src/qc/sbf.py`  
 - `src/qc/cosmx.py`  
 - `src/qc/_constants.py`  
 
-We recommend copying these files into the same folder where `src/qc/cosMx_QC.py` is located.
+We recommend copying these files into the same folder where `src/qc/cosmx_QC.py` is located.
 
 
-⚠️ To run `cosMx_qc.py` without any issues, we recommend creating a conda environment based on the YAML file located in the `env` folder, and then running the following command in a terminal:
+⚠️ To run `cosmx_QC.py` without any issues, we recommend creating a conda environment based on the YAML file located in the `env` folder, and then running the following command in a terminal:
   ```bash
    conda env create -f cosmx.yml
    ```
