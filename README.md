@@ -60,6 +60,8 @@ In the following section, we will guide you through the process of using MOSAIK 
 
 💡 Alternatively to running `cosmx_QC.py` or `xenium_QC.py` (localised in `src/qc/..`), users interested in a more interactive approach can use the notebooks CosMx_Spatial_Analysis_Workflow.ipynb and Xenium_Spatial_Analysis_Workflow.ipynb (localised in `notebooks/..`) to proceed to the following steps.
 
+⚠️ If you opt to run the notebook, we recommend running it from within the project directory.
+
 ### CosMx
 
 1. Export the data from the AtoMx platform. The export should include all `flatFiles` and `DecodedFiles` (Formerly referred to as RawFiles during export.) 
