@@ -42,6 +42,7 @@ In the following section, we will guide you through the process of using MOSAIK 
 - CosMx/Xenium conda environment (`env/..`)
 - CosMx/Xenium Reader (`src/qc/..`)
 - CosMx/Xenium QC scripts (`src/qc/..`)
+- CosMx/Xenium notebooks (`notebooks/..`)
 - Tools
   - ``export_tiff.py``: This script converts CosMx spatial transcriptomics image data from Zarr format to multiscale OME-TIFF. It supports selecting specific imaging channels, optionally includes segmentation label edge maps, and embeds spatial metadata such as pixel size and contrast limits. Channels are grouped into batches, processed with Dask for scalability, and written to OME-TIFF using tifffile, producing a tiled, compressed, pyramid image stack.
   - ``make_composite_revised_image.py``: This script processes layered 2D morphology TIFF images by extracting individual channels, converting them to 8-bit grayscale, applying optional autocontrast, and generating colorized composite images. It validates user input for clipping percentage and output format, ensures required folders are created, and handles exceptions for folder conflicts or invalid input. The script supports JPG, PNG, and TIFF formats, and creates both raw and enhanced composite outputs using predefined color mappings.
@@ -56,6 +57,8 @@ In the following section, we will guide you through the process of using MOSAIK 
 ![Workflow](images/Figure1.png)
 
 ## 📋 Integrating the data step by step 
+
+💡 Alternatively to running `cosmx_QC.py` or `xenium_QC.py` (localised in `src/qc/..`), users interested in a more interactive approach can use the notebooks CosMx_Spatial_Analysis_Workflow.ipynb and Xenium_Spatial_Analysis_Workflow.ipynb (localised in `notebooks/..`) to proceed to the following steps.
 
 ### CosMx
 
