@@ -275,4 +275,5 @@ dependencies:
       - yarl==1.20.0
       - zarr==2.18.7
       - zipp==3.21.0
+      - jupyterlab==4.5.0
 prefix: /opt/anaconda3/envs/xenium
