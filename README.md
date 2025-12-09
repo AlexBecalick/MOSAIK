@@ -131,6 +131,7 @@ When the code finishes running, it generates multiple folders inside the `Morpho
    ```
 
 ## 🔬 How to use Napari 
+### Install Napari and CosMx plugin
 
 1. Install [Napari 0.4.17](https://github.com/napari/napari/releases/tag/v0.4.17).
 
@@ -147,6 +148,8 @@ When the code finishes running, it generates multiple folders inside the `Morpho
     ```bash
     pip install napari_CosMx-0.4.17.3-py3-none-any.whl
     ```
+
+### Use CosMx plugin 
 
 5. Drag the `napari_cosmx_launcher` folder into the Napari window. You can download it from [this link](https://emckclac-my.sharepoint.com/:f:/g/personal/k2481276_kcl_ac_uk/EkO8xJFpX8ZBv_lq-5zRHQQBjcoTOE8PONclhqUfj20zSw?e=WtIiKX)
 6. In the right panel, select the parent folder that contains your CosMx raw data, this folder should include the following folders: AnalysisResults, CellStatsDir, RunSummary.
