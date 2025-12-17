@@ -141,7 +141,7 @@ When the code finishes running, it generates multiple folders inside the `Morpho
   ```bash
    conda env create -f napari.yml
    ```
-2. Launch Napari in terminal with the previous conda environment created.
+2. Launch Napari from the terminal by typing napari, within the previous conda environment created.
 3. Open the IPython console (symbol "**>_**").
 4. Install the CosMx plugin:
 
