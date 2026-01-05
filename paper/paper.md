@@ -74,7 +74,7 @@ The datasets used to generate the figures are publicly available at the followin
 - [https://nanostring.com/cosmx-mouse-brain-ffpe](https://nanostring.com/products/cosmx-spatial-molecular-imager/ffpe-dataset/cosmx-smi-mouse-brain-ffpe-dataset/)
 - [https://www.10xgenomics.com/xenium-prime-ffpe-human-skin](https://www.10xgenomics.com/datasets/xenium-prime-ffpe-human-skin)
 
-The processed datasets associated with the code are provided as examples in the following Zenodo repository: [https://doi.org/10.5281/zenodo.15365593](https://doi.org/10.5281/zenodo.15365593).
+The processed datasets associated with jupyter notebooks are provided as examples in the following Zenodo repository: [https://doi.org/10.5281/zenodo.17700741](https://doi.org/10.5281/zenodo.17700741).
 
 
 # Code availaility
