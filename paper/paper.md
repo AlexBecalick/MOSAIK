@@ -95,11 +95,12 @@ The tools that will be natively integrated into MOSAIK include segmentation meth
 # Author Contributions
 
 - Anthony Baptista: Developed the MOSAIK workflow and wrote the manuscript.
+- Diane Cruiziat: Co-developed the segmentation part of the MOSAIK workflow.
 - Rosamond Nuamah: Provided feedback on the spatial transcriptomics data and highlighted the experimental requirements to ensure the numerical workflow aligns with the raw data. 
 - Anita Grigoriadis and Ciro Chiappini: Lead the King's College London Spatial Biology Facility, where this work was conducted, and proofread the manuscript.
 
 
 # Acknowledgements
-Anthony Baptista, and Anita Grigoriadis acknowledge support from the CRUK City of London Centre Award [CTRQQR-2021/100004]. Anthony Baptista, Rosamond Nuamah, Ciro Chiappini, and Anita Grigoriadis acknowledge support from MRC [MR/X012476/1]. 
+Anthony Baptista, and Anita Grigoriadis acknowledge support from the CRUK City of London Centre Award [CTRQQR-2021/100004]. Anthony Baptista, Diane Cruiziat, Rosamond Nuamah, Ciro Chiappini, and Anita Grigoriadis acknowledge support from MRC [MR/X012476/1]. 
 
 # References
