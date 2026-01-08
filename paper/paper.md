@@ -81,7 +81,7 @@ The processed datasets associated with jupyter notebooks are provided as example
 The MOSAIK workflow is publicly available on GitHub at [https://github.com/anthbapt/MOSAIK](https://github.com/anthbapt/MOSAIK).
 
 # Related software
-This work integrates well with the existing spatial transcriptomics (ST) community, particularly with tools that are part of the [scverse ecosystem](https://scverse.org), such as *scanpy* and *spatialdata*, which provide the core Python objects used as the foundation of MOSAIK, namely *AnnData* and *SpatialData*.  
+This work integrates well with the existing spatial transcriptomics (ST) community, particularly with tools that are part of the [scverse ecosystem](https://scverse.org) [@Virshup2023], such as *scanpy* [@Wolf2018] and *spatialdata* [@Marconato2025], which provide the core Python objects used as the foundation of MOSAIK, namely *AnnData* and *SpatialData*.  
 
 Moreover, well-established libraries such as *squidpy* [@Palla2022] and *scvi-tools* [@Gayoso2022] can be easily incorporated into downstream analyses. In addition, we provide seamless integration of *Cellpose-SAM* [@Pachitariu2025] and *Proseg* [@Jones2025] for cell segmentation.
 
