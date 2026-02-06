@@ -18,8 +18,15 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import spatialdata as sd
 from reseg import Resegmentation_xenium
-from workshop_lib import save_figure
 
+def save_figure(filename, OUTPUT_DIR, dpi=300):
+    """
+    Save figure to output directory with consistent settings.
+    """
+    
+    filepath = OUTPUT_DIR / filename
+    plt.savefig(filepath, dpi=dpi, bbox_inches='tight')
+    print(f"Saved: {filepath}")
 
 
 import time
