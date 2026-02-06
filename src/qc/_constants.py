@@ -106,26 +106,40 @@ class XeniumKeys(ModeEnum):
     EXPLORER_SELECTION_KEY = "Selection"
 
 
+
 @unique
-class VisiumKeys(ModeEnum):
-    """Keys for *10X Genomics Visium* formatted dataset."""
+class MerscopeKeys(ModeEnum):
+    """Keys for *MERSCOPE* data (Vizgen plateform)."""
 
     # files and directories
-    FILTERED_COUNTS_FILE = "filtered_feature_bc_matrix.h5"
-    RAW_COUNTS_FILE = "raw_feature_bc_matrix.h5"
+    IMAGES_DIR = "images"
+    TRANSFORMATION_FILE = "micron_to_mosaic_pixel_transform.csv"
+    
+    BOUNDARIES_FILE = "cell_boundaries.parquet"
+    COUNTS_FILE = "cell_by_gene.csv"
+    CELL_METADATA_FILE = "cell_metadata.csv"
+    CELL_ID = "cell_id"
+    
+    # transcripts
+    TRANSCRIPTS_FILE_CSV = "detected_transcripts.csv"
+    TRANSCRIPTS_FILE_PARQUET = "detected_transcripts.parquet"
 
-    # images
-    IMAGE_HIRES_FILE = "spatial/tissue_hires_image.png"
-    IMAGE_LOWRES_FILE = "spatial/tissue_lowres_image.png"
+    # VPT default outputs
+    CELLPOSE_BOUNDARIES = "cellpose_micron_space.parquet"
+    WATERSHED_BOUNDARIES = "watershed_micron_space.parquet"
+    VPT_NAME_COUNTS = "cell_by_gene"
+    VPT_NAME_OBS = "cell_metadata"
+    VPT_NAME_BOUNDARIES = "cell_boundaries"
 
-    # scalefactors
-    SCALEFACTORS_FILE = "scalefactors_json.json"
-    SCALEFACTORS_HIRES = "tissue_hires_scalef"
-    SCALEFACTORS_LOWRES = "tissue_lowres_scalef"
-
-    # spots
-    SPOTS_FILE_1 = "tissue_positions_list.csv"
-    SPOTS_FILE_2 = "tissue_positions.csv"
-    SPOTS_X = "pxl_col_in_fullres"
-    SPOTS_Y = "pxl_row_in_fullres"
+    # metadata
+    METADATA_CELL_KEY = "EntityID"
+    COUNTS_CELL_KEY = "cell"
+    CELL_X = "center_x"
+    CELL_Y = "center_y"
+    GLOBAL_X = "global_x"
+    GLOBAL_Y = "global_y"
+    GLOBAL_Z = "global_z"
+    Z_INDEX = "ZIndex"
+    REGION_KEY = "cells_region"
+    GENE_KEY = "gene"
 
