@@ -14,6 +14,8 @@ Please cite the following paper if you use MOSAIK in your research: [A.Baptista 
 ⭐ New: FOVs Stitching and Resegmentation with MOSAIK
 Stitch CosMx Field of Views (FOVs) and resegment your samples (CosMx and Xenium support) using MOSAIK's enhanced pipeline. The workflow preprocesses images, applies Cellpose-SAM for segmentation, and uses geometric features to automatically remove artifacts. These features can be found in ``src/resegmentation`` folder.
 
+**Update 06/02/2026**: Update of the resegmentation in two steps (CellposeSAM + Proseg) for both CosMx and Xenium. Possibility to integrate MERSCOPE data with MOSAIK (the segmentation will be released soon)
+
 **Update 24/11/2025**: Two new jupyter notebook have been upload to `notebooks/..` to replicate the analysis done in the arXiv preprint for both CosMx and Xenium.
 The data can be downloaded at the following links: [DOI 10.5281/zenodo.15365592](https://zenodo.org/records/17700741)
 
