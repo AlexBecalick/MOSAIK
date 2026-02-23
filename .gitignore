@@ -1,5 +1,6 @@
 # Sphinx / docs build outputs
 docs/_build/
+docs/*.md
 
 # Python
 __pycache__/
