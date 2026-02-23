@@ -1,0 +1,179 @@
+# MOSAIK parameters
+# Edit paths and values for your environment and data.
+# Paths can be absolute or relative to the working directory when the script is run.
+
+# -----------------------------------------------------------------------------
+# MERSCOPE QC (used by src/qc/merscope_QC.py)
+# -----------------------------------------------------------------------------
+merscope_qc:
+  # Root directory containing your MERSCOPE slide/region folders
+  data_path: "/path/to/MERFISH"
+  # Slide or region name (subfolder under data_path, or path suffix)
+  slide: "AG07"
+  # Output Zarr path (relative to data_path after chdir, or absolute)
+  zarr_path: "AG07.zarr"
+  # Z layers to load for images (e.g. middle layer 3 only, or [2, 3])
+  z_layers: [2, 3]
+
+# -----------------------------------------------------------------------------
+# Resegmentation – shared (ProSeg binary and gene list)
+# Used by src/resegmentation/reseg.py
+# -----------------------------------------------------------------------------
+resegmentation:
+  # Path to the ProSeg executable (e.g. from cargo: ~/.cargo/bin/proseg)
+  proseg_binary: "/path/to/proseg"
+  # CSV file with column 'gene_name' for Xenium/ProSeg gene ordering
+  gene_list_path: "gene_list_10X.csv"
+
+# -----------------------------------------------------------------------------
+# Resegmentation – Xenium workflow (src/resegmentation/reseg_workflow.py)
+# -----------------------------------------------------------------------------
+resegmentation_xenium:
+  # Working directory (base path for inputs and outputs)
+  base_path: "/path/to/workspace"
+  # CSV with sample metadata: must include columns e.g. metabric_ID, tissue_type
+  metadata_path: "metadata_final.csv"
+  # Column name in metadata CSV that identifies each sample
+  sample_id_column: "metabric_ID"
+  # Value in metadata to filter samples (e.g. only run for tissue_type == 'breast')
+  tissue_filter_column: "tissue_type"
+  tissue_filter_value: "breast"
+  # Directory under base_path containing raw_{sample_id}.zarr
+  zarr_dir: "raw_cores"
+  # Output folder name pattern (use {sample_name} as placeholder)
+  output_dir_pattern: "Segmentated_cores_{sample_name}"
+  # Channel names in morphology image (order must match Zarr)
+  channel_names: ["DAPI", "ATP1A1/CD45/E-Cadherin", "AlphaSMA/Vimentin"]
+  channels_to_use: ["DAPI", "ATP1A1/CD45/E-Cadherin", "AlphaSMA/Vimentin"]
+  # Cellpose parameters
+  factor_rescale: 2
+  flow_threshold: 1.2
+  cellprob_threshold: -3
+  tile_overlap: 0.15
+  # ProSeg parameters
+  proseg_samples: 200
+  proseg_voxel_size: 2
+  proseg_voxel_layers: 2
+  proseg_nuclear_reassignment_prob: 0.25
+  proseg_diffusion_probability: 0.25
+  proseg_num_threads: 12
+  # Files written to cwd by pipeline that should be moved to output dir
+  output_files_to_move:
+    - cell_boundaries_refined.geojson
+    - cell_boundaries_refined.shp
+    - cell_metadata_refined.csv
+    - transcripts_refined.csv
+    - cell_boundaries_refined.cpg
+    - cell_boundaries_refined.dbf
+    - cell_boundaries_refined.shx
+    - mask.png
+    - morphology_focus_ready.png
+    - refined_segmentation.png
+    - segmentation_comparison.png
+  # Optional: path to load final integrated Zarr after loop (for inspection).
+  # Set to null to skip loading; or set to a path like "Segmentated_cores_SAMPLE/integrated_proseg_output.zarr"
+  final_example_zarr: null
+
+# -----------------------------------------------------------------------------
+# Resegmentation – CosMx script (src/resegmentation/reseg_script.py)
+# -----------------------------------------------------------------------------
+resegmentation_cosmx:
+  # Base directory for inputs and outputs
+  base_path: "/path/to/documents"
+  # Input morphology Zarr (full path or relative to base_path)
+  zarr_path: "/path/to/G16_morphology_2D.zarr"
+  # FOV positions CSV (full path or relative to base_path)
+  fov_positions_path: "/path/to/G16_fov_positions_file.csv"
+  # FOV element name template suffixes in SpatialData
+  template: ["_image", "_labels", "_shapes", "_points"]
+  # FOV index range for first sample (e.g. 1..72)
+  sample_range_start: 1
+  sample_range_end: 72
+  # Sample name used for stitching and output
+  sample_name: "S1"
+  # Channel names in image (order must match Zarr)
+  channel_names: ["B", "G", "Y", "R", "U"]
+  channels_to_use: ["U"]
+  factor_rescale: 8
+  # Preprocessed image and stitched zarr naming
+  preprocessed_image_output: "Stiched_segmentation_ready.png"
+  stitched_zarr_name: "stitched_S1.zarr"
+  updated_zarr_name: "updated_stitched_S1.zarr"
+  # Cellpose parameters
+  flow_threshold: 1.2
+  cellprob_threshold: -3
+  tile_overlap: 0.15
+  # Element names in SpatialData
+  image_name: "Stitched"
+  label_name: "labels"
+  shape_name: "shapes"
+  point_name: "points"
+  # For post-run analysis: element name for vis_segmentation
+  vis_element_name: "S1_6"
+
+# -----------------------------------------------------------------------------
+# Resegmentation – MERSCOPE workflow (src/resegmentation/reseg_merscope_workflow.py)
+# -----------------------------------------------------------------------------
+resegmentation_merscope:
+  # Working directory (base path for inputs and outputs)
+  base_path: "/path/to/workspace"
+  # Metadata CSV listing samples to process
+  metadata_path: "metadata_merscope.csv"
+  # Column name in metadata CSV that identifies each sample
+  sample_id_column: "sample_id"
+  # Optional tissue filter (set tissue_filter_value: null to disable)
+  tissue_filter_column: "tissue_type"
+  tissue_filter_value: null
+  # Directory containing input zarr files named by zarr_name_pattern
+  zarr_dir: "raw_merscope"
+  # Format string with {sample_name}
+  zarr_name_pattern: "raw_{sample_name}.zarr"
+  # Output folder name pattern
+  output_dir_pattern: "Segmentated_merscope_{sample_name}"
+  # MERSCOPE image selection
+  # If null, the first matching image key with a _zN suffix is used.
+  image_key_prefix: null
+  # Inclusive z range for max projection
+  z_start: 2
+  z_end: 4
+  # Optional channel subset; null means use all channels
+  channels_to_use: null
+  # Cellpose/preprocessing parameters
+  factor_rescale: 2
+  preprocessed_image_output: "merscope_ready.png"
+  flow_threshold: 1.2
+  cellprob_threshold: -3
+  tile_overlap: 0.15
+  # SpatialData element names for output
+  label_name: "labels"
+  shape_name: "shapes"
+  point_name: "transcripts"
+  # Transcript schema mapping (source columns in points table)
+  transcript_gene_col: "gene"
+  transcript_x_col: "x"
+  transcript_y_col: "y"
+  transcript_z_col: "z"
+  transcript_cell_id_col: null
+  # Filters and thresholds
+  min_transcript_qv: null
+  # ProSeg parameters
+  run_proseg: true
+  proseg_samples: 200
+  proseg_voxel_size: 2
+  proseg_voxel_layers: 2
+  proseg_nuclear_reassignment_prob: 0.25
+  proseg_diffusion_probability: 0.25
+  proseg_num_threads: 12
+  # Files written to cwd by pipeline that should be moved to output dir
+  output_files_to_move:
+    - cell_boundaries_refined.geojson
+    - cell_boundaries_refined.shp
+    - cell_metadata_refined.csv
+    - transcripts_refined.csv
+    - cell_boundaries_refined.cpg
+    - cell_boundaries_refined.dbf
+    - cell_boundaries_refined.shx
+    - mask.png
+    - refined_segmentation.png
+    - segmentation_comparison.png
+  final_example_zarr: null
