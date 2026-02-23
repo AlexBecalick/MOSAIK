@@ -40,6 +40,16 @@ from proseg_wrapper import (
     export_data
 )
 
+
+def _get_reseg_params():
+    """Load resegmentation section from src/params.yaml (proseg_binary, gene_list_path)."""
+    _src = Path(__file__).resolve().parent.parent
+    if str(_src) not in sys.path:
+        sys.path.insert(0, str(_src))
+    from params_loader import get_params
+    return get_params("resegmentation")
+
+
 class Resegmentation_cosmx:
     """Pipeline for spatial omics segmentation and data integration.
 
@@ -2031,22 +2041,24 @@ class Resegmentation_xenium:
         return self.points_model, self.vdata
     
 
-    def process_xenium_adata(self, gene_list_path="gene_list_10X.csv"):
+    def process_xenium_adata(self, gene_list_path=None):
         """
         Process Xenium AnnData: compute QC metrics, remove controls, add missing genes
-        
+
         Parameters:
         -----------
         adata : AnnData
             Input AnnData object
-        gene_list_path : str
-            Path to reference gene list CSV
-        
+        gene_list_path : str, optional
+            Path to reference gene list CSV. If None, read from src/params.yaml (resegmentation.gene_list_path).
+
         Returns:
         --------
         adata : AnnData
             Processed AnnData object
         """
+        if gene_list_path is None:
+            gene_list_path = _get_reseg_params()["gene_list_path"]
 
         # Define control keywords
         keywords = {
@@ -2277,11 +2289,11 @@ class Resegmentation_xenium:
 
         # Run Proseg refinement
         self.log.info("Running Proseg refinement")
+        _reseg_params = _get_reseg_params()
         output_path = run_proseg_refinement(
             transcripts_df=transcripts_df,
             output_path=str(output_path),
-            proseg_binary="/users/k2481276/.cargo/bin/proseg",
- #"/Users/k2481276/Downloads/proseg-main/target/release/proseg",
+            proseg_binary=_reseg_params["proseg_binary"],
             x_col="x_updated",
             y_col="y_updated",
             z_col="z",
@@ -2367,24 +2379,26 @@ class Resegmentation_xenium:
         return self.integrated_sdata
 
 
-    def process_xenium_adata_proseg(self, gene_list_path="gene_list_10X.csv"):
+    def process_xenium_adata_proseg(self, gene_list_path=None):
         """
         Process Proseg-refined Xenium AnnData: compute QC metrics, remove controls, add missing genes.
-        
+
         This is an adapted version of process_xenium_adata for Proseg-refined data.
-        
+
         Parameters
         ----------
         adata : AnnData
             Input refined AnnData object from Proseg
         gene_list_path : str, optional
-            Path to reference gene list CSV. Defaults to "gene_list_10X.csv".
-        
+            Path to reference gene list CSV. If None, read from src/params.yaml (resegmentation.gene_list_path).
+
         Returns
         -------
         adata : AnnData
             Processed AnnData object with QC metrics and standardized gene set
         """
+        if gene_list_path is None:
+            gene_list_path = _get_reseg_params()["gene_list_path"]
         
         # Define control keywords
         keywords = {

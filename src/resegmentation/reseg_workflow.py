@@ -1,17 +1,27 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # =============================================================================
-# 
+#
 # Metabric: Resegmentation
+# Paths and settings are read from src/params.yaml (section: resegmentation_xenium).
 #
 # =============================================================================
 import warnings
 warnings.filterwarnings('ignore')
 import os
+import sys
 from pathlib import Path
-# Paths
-BASE_PATH = Path("/scratch/users/k2481276")
+
+# Load parameters from src/params.yaml
+_src_dir = Path(__file__).resolve().parent.parent
+if str(_src_dir) not in sys.path:
+    sys.path.insert(0, str(_src_dir))
+from params_loader import get_params
+
+_params = get_params("resegmentation_xenium")
+BASE_PATH = Path(_params["base_path"])
 os.chdir(BASE_PATH)
+
 import logging
 import shutil
 import pandas as pd
@@ -43,17 +53,25 @@ plt.rcParams['axes.labelsize'] = 5
 plt.rcParams['xtick.labelsize'] = 3
 plt.rcParams['ytick.labelsize'] = 3
 
-metadata = pd.read_csv("metadata_final.csv")
-ZARR_DIR = "raw_cores"
+metadata = pd.read_csv(_params["metadata_path"])
+ZARR_DIR = _params["zarr_dir"]
+sample_id_col = _params["sample_id_column"]
+tissue_col = _params["tissue_filter_column"]
+tissue_value = _params["tissue_filter_value"]
+output_dir_pattern = _params["output_dir_pattern"]
+channel_names_xe = _params["channel_names"]
+channels_to_use_xe = _params["channels_to_use"]
+output_files_to_move = _params["output_files_to_move"]
+final_example_zarr = _params.get("final_example_zarr")
 
 # =========================================================================
 # PROCESS
 # =========================================================================
 for _, row in metadata.iterrows():
-    if row.tissue_type == 'breast':
-        st_id = row.metabric_ID
+    if row[tissue_col] == tissue_value:
+        st_id = row[sample_id_col]
         SAMPLE_NAME = st_id
-        OUTPUT_DIR = BASE_PATH / f"Segmentated_cores_{SAMPLE_NAME}"
+        OUTPUT_DIR = BASE_PATH / output_dir_pattern.format(sample_name=SAMPLE_NAME)
         OUTPUT_DIR.mkdir(exist_ok=True)
         
         # =========================================================================
@@ -69,14 +87,14 @@ for _, row in metadata.iterrows():
         print("\n[2] Performing cell segmentation")
         
         image_da = core.images['morphology_focus']["scale0"].ds["image"]
-        channel_names = list(image_da.coords["c"].values)    
-        channels_to_use = ['DAPI', 'ATP1A1/CD45/E-Cadherin', 'AlphaSMA/Vimentin']
+        channel_names = list(image_da.coords["c"].values)
+        channels_to_use = channels_to_use_xe
         
         pipe = Resegmentation_xenium(
             ZARR_DIR,
             f"raw_{SAMPLE_NAME}.zarr",
             "morphology_focus_ready.png",
-            factor_rescale=2,
+            factor_rescale=_params["factor_rescale"],
             image_name='morphology_focus',
             label_name='labels',
             shape_name='shapes',
@@ -85,20 +103,20 @@ for _, row in metadata.iterrows():
         
         pipe.preprocess_image(channel_names, channels_to_use)
         pipe.run_cellpose(
-            flow_threshold=1.2,
-            cellprob_threshold=-3,
-            tile_overlap=0.15
+            flow_threshold=_params["flow_threshold"],
+            cellprob_threshold=_params["cellprob_threshold"],
+            tile_overlap=_params["tile_overlap"]
         )
         
         pipe.update_spatialdata(proseg_refinement=False)
         pipe.run_proseg(
-            samples=200,
-            voxel_size=2,
-            voxel_layers=2, # 2 same time (so depend on the results)
-            nuclear_reassignment_prob=0.25,
-            diffusion_probability=0.25, 
-            num_threads=12,
-            )
+            samples=_params["proseg_samples"],
+            voxel_size=_params["proseg_voxel_size"],
+            voxel_layers=_params["proseg_voxel_layers"],
+            nuclear_reassignment_prob=_params["proseg_nuclear_reassignment_prob"],
+            diffusion_probability=_params["proseg_diffusion_probability"],
+            num_threads=_params["proseg_num_threads"],
+        )
         
         # Save segmentation visualizations
         pipe.gdf_polygons.plot()
@@ -107,20 +125,8 @@ for _, row in metadata.iterrows():
         pipe.gdf_points.plot(markersize=0.001)
         save_figure(f"{SAMPLE_NAME}_points.png", OUTPUT_DIR)
         
-        # Move output files
-        output_files = ['cell_boundaries_refined.geojson', 
-                        'cell_boundaries_refined.shp', 
-                        'cell_metadata_refined.csv', 
-                        'transcripts_refined.csv', 
-                        'cell_boundaries_refined.cpg', 
-                        'cell_boundaries_refined.dbf', 
-                        'cell_boundaries_refined.shx',
-                        "mask.png", 
-                        "morphology_focus_ready.png", 
-                        "refined_segmentation.png",
-                        "morphology_focus_ready.png",
-                        "segmentation_comparison.png"]
-        for k in output_files:
+        # Move output files (list from params)
+        for k in output_files_to_move:
             if os.path.exists(k):
                 destination = os.path.join(OUTPUT_DIR, k)
                 if os.path.exists(destination):
@@ -143,8 +149,11 @@ for _, row in metadata.iterrows():
         if os.path.exists(destination2):
             shutil.rmtree(destination2)
         shutil.move("integrated_proseg_output.zarr", OUTPUT_DIR)
-        
-sdata = sd.read_zarr('Segmentated_cores_TMA1_core1/integrated_proseg_output.zarr')
+
+if final_example_zarr and os.path.exists(final_example_zarr):
+    sdata = sd.read_zarr(final_example_zarr)
+else:
+    sdata = None
 
 end = time.time()
 print("time: ", end-start)

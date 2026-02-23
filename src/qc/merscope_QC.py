@@ -4,12 +4,24 @@
 # Imports & Setup
 # ========================
 import os
+import sys
 import warnings
 import logging
+from pathlib import Path
+
+# Load paths and settings from src/params.yaml (section: merscope_qc)
+_src_dir = Path(__file__).resolve().parent.parent
+if str(_src_dir) not in sys.path:
+    sys.path.insert(0, str(_src_dir))
+from params_loader import get_params
+
+_params = get_params("merscope_qc")
+path = _params["data_path"]
+slide = _params["slide"]
+zarr_path = _params["zarr_path"]
+z_layers = _params["z_layers"]
 
 # Set the working directory where your data and results are located.
-# Replace "/path/to/project/" with the absolute or relative path to your project folder.
-path = "/Volumes/SSD/MERFISH/"
 os.chdir(path)
 
 # Silence unnecessary warnings and set logging to show only warnings or errors.
@@ -30,21 +42,13 @@ import merscope
 # ========================
 # Paths & Data Loading
 # ========================
-# zarr_path:
-#   Path to the Zarr-formatted spatial dataset from the current path (established before). 
-#   If the code is running for the first time you should give a name to the file 
-#   and how to access from current path
-zarr_path = "AG07.zarr"
-
-# slide:
-#   Path to the slide-specific directory (often a flattened structure used for annotations,
-#   cell labels, or per-slide data). This typically corresponds to a single TMA or slide.
-slide = "/AG07"
+# Paths are set from src/params.yaml (merscope_qc.data_path, slide, zarr_path, z_layers).
 
 first_run = user_input = input("Is it the first run (0: False, 1: True): ")
 
 if first_run == '1':
-    sdata = merscope.merscope(path+slide, z_layers=[2,3])
+    region_path = os.path.join(path, slide.strip("/")) if not os.path.isabs(slide) else slide
+    sdata = merscope.merscope(region_path, z_layers=z_layers)
     sdata.write(zarr_path)
 
 sdata = sd.read_zarr(zarr_path)
