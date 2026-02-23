@@ -1,0 +1,27 @@
+# Sphinx / docs build outputs
+docs/_build/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Matplotlib config
+.mplconfig/
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
