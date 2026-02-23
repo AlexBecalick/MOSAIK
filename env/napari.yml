@@ -1,4 +1,4 @@
-name: napari-test
+name: MOSAIK-napari
 channels:
   - conda-forge
   - defaults

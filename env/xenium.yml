@@ -1,4 +1,4 @@
-name: xenium
+name: MOSAIK-xenium
 channels:
   - defaults
 dependencies:
@@ -276,4 +276,4 @@ dependencies:
       - zarr==2.18.7
       - zipp==3.21.0
       - jupyterlab==4.5.0
-prefix: /opt/anaconda3/envs/xenium
+prefix: /opt/anaconda3/envs/MOSAIK-xenium

@@ -1,23 +1,23 @@
-name: merscope
+name: MOSAIK-merscope
 channels:
+  - conda-forge
   - defaults
 dependencies:
-  - bzip2=1.0.8=h80987f9_6
-  - ca-certificates=2025.2.25=hca03da5_0
-  - expat=2.7.1=h313beb8_0
-  - libcxx=14.0.6=h848a8c0_0
-  - libffi=3.4.4=hca03da5_1
-  - ncurses=6.4=h313beb8_0
-  - openssl=3.0.16=h02f6b3c_0
-  - pip=25.0=py312hca03da5_0
-  - python=3.12.9=h99e199e_0
-  - readline=8.2=h1a28f6b_0
-  - setuptools=75.8.0=py312hca03da5_0
-  - sqlite=3.45.3=h80987f9_0
-  - tk=8.6.14=h6ba3021_1
-  - wheel=0.45.1=py312hca03da5_0
-  - xz=5.6.4=h80987f9_1
-  - zlib=1.2.13=ha1e9f54_2
+  - bzip2=1.0.8
+  - ca-certificates=2025.2.25
+  - expat=2.7.1
+  - libffi=3.4.4
+  - ncurses=6.4
+  - openssl=3.0.16
+  - pip=25.0
+  - python=3.12.9
+  - readline=8.2
+  - setuptools=75.8.0
+  - sqlite=3.45.3
+  - tk=8.6.14
+  - wheel=0.45.1
+  - xz=5.6.4
+  - zlib=1.2.13
   - pip:
       - aiobotocore==2.21.1
       - aiohappyeyeballs==2.6.1
@@ -28,7 +28,6 @@ dependencies:
       - anndata==0.11.4
       - annotated-types==0.7.0
       - anyio==4.12.1
-      - applaunchservices==0.3.0
       - appnope==0.1.4
       - argon2-cffi==25.1.0
       - argon2-cffi-bindings==25.1.0
@@ -196,10 +195,6 @@ dependencies:
       - pyls-spyder==0.4.0
       - pynacl==1.5.0
       - pynndescent==0.5.13
-      - pyobjc-core==12.1
-      - pyobjc-framework-cocoa==12.1
-      - pyobjc-framework-coreservices==12.1
-      - pyobjc-framework-fsevents==12.1
       - pyogrio==0.10.0
       - pyparsing==3.2.3
       - pyproj==3.7.1
@@ -307,4 +302,3 @@ dependencies:
       - yarl==1.20.0
       - zarr==2.18.7
       - zipp==3.21.0
-prefix: /opt/anaconda3/envs/merscope
