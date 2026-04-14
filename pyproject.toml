@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mosaik"
+version = "0.1.0"
+description = "MOSAIK: Multi-Origin Spatial Transcriptomics Analysis and Integration Kit"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [
+  { name = "MOSAIK contributors" }
+]
+
+[project.urls]
+Homepage = "https://github.com/anthbapt/MOSAIK"
+Repository = "https://github.com/anthbapt/MOSAIK"
+
+[project.scripts]
+napari-compare-xenium-merscope = "mosaik.napari_compare_xenium_merscope:main"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+py-modules = ["params_loader"]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["mosaik*", "qc*", "resegmentation*"]
