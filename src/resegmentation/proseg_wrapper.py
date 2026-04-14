@@ -4,7 +4,7 @@ import subprocess
 import tempfile
 import traceback
 from pathlib import Path
-from typing import Optional, Union
+from typing import Optional, Union, Tuple
 import geopandas as gpd
 import numpy as np
 import pandas as pd
@@ -64,7 +64,7 @@ def _check_proseg_version_gte(version: str, target: str) -> bool:
 
 
 def run_proseg_refinement(
-    transcripts_df: pd.DataFrame,
+    transcripts_df: Union[pd.DataFrame, str, Path],
     output_path: Union[str, Path],
     proseg_binary: Union[str, Path],
     x_col: str = "x",
@@ -73,10 +73,23 @@ def run_proseg_refinement(
     gene_col: str = "feature_name",
     cell_id_col: str = "cell_id",
     samples: int = 1000,
+    burnin_voxel_size: Optional[float] = None,
     voxel_size: float = 0.5,
     voxel_layers: int = 1,
     nuclear_reassignment_prob: float = 0.2,
     diffusion_probability: float = 0.2,
+    cell_compactness: Optional[float] = None,
+    expand_initialized_cells: Optional[int] = None,
+    use_cell_initialization: bool = False,
+    prior_seg_reassignment_prob: Optional[float] = None,
+    morphology_steps_per_iter: Optional[int] = None,
+    max_transcript_nucleus_distance: Optional[float] = None,
+    cellpose_masks: Optional[Union[np.ndarray, str, Path]] = None,
+    cellpose_cellprobs: Optional[Union[np.ndarray, str, Path]] = None,
+    cellpose_scale: Optional[float] = None,
+    cellpose_x_transform: Optional[Tuple[float, float, float]] = None,
+    cellpose_y_transform: Optional[Tuple[float, float, float]] = None,
+    diffusion_sigma_far: Optional[float] = None,
     num_threads=12,
     overwrite: bool = True,
     logger: Optional[logging.Logger] = None
@@ -86,8 +99,9 @@ def run_proseg_refinement(
     
     Parameters
     ----------
-    transcripts_df : pd.DataFrame
-        DataFrame containing transcript data with coordinates, gene names, and cell IDs
+    transcripts_df : pd.DataFrame or str or Path
+        Either a DataFrame containing transcript data with coordinates, gene
+        names, and cell IDs, or a path to a CSV file containing those columns.
     output_path : str or Path
         Path where the Proseg output zarr will be saved
     proseg_binary : str or Path
@@ -104,6 +118,8 @@ def run_proseg_refinement(
         Name of the cell ID column
     samples : int, default 1000
         Number of MCMC sampling iterations
+    burnin_voxel_size : float, optional
+        Voxel size used during burn-in (must be >= voxel_size)
     voxel_size : float, default 0.5
         Size of voxels for segmentation (smaller = higher resolution)
     voxel_layers : int, default 1
@@ -112,6 +128,34 @@ def run_proseg_refinement(
         Probability of reassigning transcripts from nuclear regions
     diffusion_probability : float, default 0.2
         Probability of transcript diffusion to neighboring cells
+    cell_compactness : float, optional
+        Cell compactness prior (default 0.03 in ProSeg). Larger values allow
+        less spherical / more elongated cells.
+    expand_initialized_cells : int, optional
+        Expand initialized cells outward by this many voxels before sampling.
+        Useful when seed masks are systematically too small.
+    use_cell_initialization : bool, default False
+        Instruct ProSeg to initialize from provided cell assignments directly.
+    prior_seg_reassignment_prob : float, optional
+        Probability of reassigning transcripts under the prior segmentation.
+    morphology_steps_per_iter : int, optional
+        Number of morphology sub-steps per sampling iteration.
+    max_transcript_nucleus_distance : float, optional
+        Exclude transcripts farther than this distance from any nucleus.
+    cellpose_masks : np.ndarray or str or Path, optional
+        Cellpose mask array or path to a .npy/.npy.gz file
+    cellpose_cellprobs : np.ndarray or str or Path, optional
+        Cellpose cell probability array or path to a .npy/.npy.gz file
+    cellpose_scale : float, optional
+        Cellpose mask scale (microns per pixel)
+    cellpose_x_transform : tuple of float, optional
+        Affine transform from mask pixels to microns for x (a, b, c)
+    cellpose_y_transform : tuple of float, optional
+        Affine transform from mask pixels to microns for y (a, b, c)
+    diffusion_sigma_far : float, optional
+        Stddev for repositioning diffused transcripts.  Larger values let
+        transcripts hop further from their original position during the
+        diffusion step.
     overwrite : bool, default True
         Whether to overwrite existing output
     logger : logging.Logger, optional
@@ -154,11 +198,46 @@ def run_proseg_refinement(
 
     # Validate inputs
     required_columns = [x_col, y_col, z_col, gene_col, cell_id_col]
-    missing_columns = [
-        col for col in required_columns if col not in transcripts_df.columns]
-    if missing_columns:
+    transcript_csv_path: Optional[Path] = None
+    if isinstance(transcripts_df, (str, Path)):
+        transcript_csv_path = Path(transcripts_df)
+        if not transcript_csv_path.exists():
+            raise FileNotFoundError(
+                f"Transcript CSV not found: {transcript_csv_path}"
+            )
+        header_columns = list(pd.read_csv(transcript_csv_path, nrows=0).columns)
+        missing_columns = [
+            col for col in required_columns if col not in header_columns
+        ]
+        if missing_columns:
+            raise ValueError(
+                "Missing required columns in transcript CSV "
+                f"{transcript_csv_path}: {missing_columns}"
+            )
+    else:
+        missing_columns = [
+            col for col in required_columns if col not in transcripts_df.columns
+        ]
+        if missing_columns:
+            raise ValueError(
+                f"Missing required columns in transcripts_df: {missing_columns}"
+            )
+    if int(samples) < 1:
+        raise ValueError(f"samples must be >= 1 (got {samples})")
+    if int(voxel_layers) > 256:
         raise ValueError(
-            f"Missing required columns in transcripts_df: {missing_columns}")
+            "voxel_layers exceeds ProSeg maximum of 256 "
+            f"(got voxel_layers={voxel_layers}). "
+            "For Xenium data, do not use len(unique(z)); use a small layer "
+            "count (typically 2-8) based on z-step size or workflow defaults."
+        )
+    if int(voxel_layers) < 1:
+        raise ValueError(f"voxel_layers must be >= 1 (got {voxel_layers})")
+    if burnin_voxel_size is not None and burnin_voxel_size < voxel_size:
+        raise ValueError(
+            "burnin_voxel_size must be >= voxel_size "
+            f"(got burnin_voxel_size={burnin_voxel_size}, voxel_size={voxel_size})"
+        )
 
     # Check proseg availability
     proseg_version = _check_proseg_available(proseg_binary)
@@ -168,18 +247,58 @@ def run_proseg_refinement(
     # Prepare transcripts
     logger.info("Preparing transcript data")
     proseg_columns = [x_col, y_col, z_col, gene_col, cell_id_col]
-    transcript_table = transcripts_df[proseg_columns].copy()
-    logger.info(
-        f"Selected {len(transcript_table)} transcripts with columns: {proseg_columns}")
+    n_transcripts = None
 
     # Create working directory and run proseg
     with tempfile.TemporaryDirectory() as tmp_dir:
         tmp_path = Path(tmp_dir)
-        csv_path = tmp_path / "transcripts.csv"
+        if transcript_csv_path is not None:
+            csv_path = transcript_csv_path
+            logger.info(
+                "Using provided transcript CSV: "
+                f"{csv_path} with columns {proseg_columns}"
+            )
+        else:
+            csv_path = tmp_path / "transcripts.csv"
+            transcript_view = transcripts_df.loc[:, proseg_columns]
+            n_transcripts = len(transcript_view)
+            transcript_view.to_csv(csv_path, index=False)
+            logger.info(f"Saved {n_transcripts} transcripts to {csv_path}")
 
-        # Save transcripts to CSV
-        transcript_table.to_csv(csv_path, index=False)
-        logger.info(f"Saved {len(transcript_table)} transcripts to {csv_path}")
+        cellpose_mask_path = None
+        cellpose_cellprobs_path = None
+        if cellpose_masks is not None:
+            if isinstance(cellpose_masks, (str, Path)):
+                cellpose_mask_path = Path(cellpose_masks)
+            else:
+                cellpose_mask_path = tmp_path / "cellpose_masks.npy"
+                np.save(
+                    cellpose_mask_path,
+                    np.asarray(cellpose_masks, dtype=np.uint32)
+                )
+
+        if cellpose_cellprobs is not None:
+            if isinstance(cellpose_cellprobs, (str, Path)):
+                cellpose_cellprobs_path = Path(cellpose_cellprobs)
+            else:
+                cellpose_cellprobs_path = tmp_path / "cellpose_cellprobs.npy"
+                np.save(
+                    cellpose_cellprobs_path,
+                    np.asarray(cellpose_cellprobs, dtype=np.float32)
+                )
+
+        if cellpose_mask_path is not None:
+            has_scale = cellpose_scale is not None
+            has_affine = (
+                cellpose_x_transform is not None
+                and cellpose_y_transform is not None
+            )
+            if not (has_scale or has_affine):
+                raise ValueError(
+                    "Cellpose masks provided, but no transform supplied. "
+                    "Provide cellpose_scale or both cellpose_x_transform and "
+                    "cellpose_y_transform."
+                )
 
         # Build Proseg command
         cmd = [
@@ -197,6 +316,54 @@ def run_proseg_refinement(
             "--nuclear-reassignment-prob", str(nuclear_reassignment_prob),
             "--diffusion-probability", str(diffusion_probability),
         ]
+        if int(samples) < 100:
+            # Proseg defaults recorded-samples=100, which panics if samples < 100.
+            cmd.extend(["--recorded-samples", str(int(samples))])
+
+        if cell_compactness is not None:
+            cmd.extend(["--cell-compactness", str(cell_compactness)])
+        if expand_initialized_cells is not None:
+            cmd.extend(["--expand-initialized-cells", str(expand_initialized_cells)])
+        if use_cell_initialization:
+            cmd.append("--use-cell-initialization")
+        if prior_seg_reassignment_prob is not None:
+            cmd.extend(["--prior-seg-reassignment-prob", str(prior_seg_reassignment_prob)])
+        if morphology_steps_per_iter is not None:
+            cmd.extend(["--morphology-steps-per-iter", str(morphology_steps_per_iter)])
+        if max_transcript_nucleus_distance is not None:
+            cmd.extend(
+                ["--max-transcript-nucleus-distance", str(max_transcript_nucleus_distance)]
+            )
+
+        if cellpose_mask_path is not None:
+            cmd.extend(["--cellpose-masks", str(cellpose_mask_path)])
+        if cellpose_cellprobs_path is not None:
+            cmd.extend(["--cellpose-cellprobs", str(cellpose_cellprobs_path)])
+
+        has_affine = (
+            cellpose_x_transform is not None and cellpose_y_transform is not None
+        )
+        if has_affine:
+            if len(cellpose_x_transform) != 3:
+                raise ValueError("cellpose_x_transform must be a 3-tuple (a, b, c)")
+            if len(cellpose_y_transform) != 3:
+                raise ValueError("cellpose_y_transform must be a 3-tuple (a, b, c)")
+            cmd.extend(
+                ["--cellpose-x-transform"]
+                + [str(x) for x in cellpose_x_transform]
+            )
+            cmd.extend(
+                ["--cellpose-y-transform"]
+                + [str(y) for y in cellpose_y_transform]
+            )
+        elif cellpose_scale is not None:
+            cmd.extend(["--cellpose-scale", str(cellpose_scale)])
+
+        if burnin_voxel_size is not None:
+            cmd.extend(["--burnin-voxel-size", str(burnin_voxel_size)])
+
+        if diffusion_sigma_far is not None:
+            cmd.extend(["--diffusion-sigma-far", str(diffusion_sigma_far)])
 
         if use_zarr_output:
             cmd.extend(["--output-spatialdata", str(output_path)])
@@ -209,28 +376,55 @@ def run_proseg_refinement(
         logger.info(f"Command: {' '.join(cmd)}")
         logger.info("Parameters:")
         logger.info(f"- Samples: {samples}")
+        if burnin_voxel_size is not None:
+            logger.info(f"- Burn-in voxel size: {burnin_voxel_size}")
         logger.info(f"- Voxel size: {voxel_size}")
         logger.info(f"- Voxel layers: {voxel_layers}")
         logger.info(
             f"- Nuclear reassignment prob: {nuclear_reassignment_prob}")
         logger.info(f"- Diffusion probability: {diffusion_probability}")
+        if expand_initialized_cells is not None:
+            logger.info(f"- Expand initialized cells: {expand_initialized_cells}")
+        logger.info(f"- Use cell initialization: {use_cell_initialization}")
+        if prior_seg_reassignment_prob is not None:
+            logger.info(f"- Prior seg reassignment prob: {prior_seg_reassignment_prob}")
+        if morphology_steps_per_iter is not None:
+            logger.info(f"- Morphology steps/iter: {morphology_steps_per_iter}")
+        if max_transcript_nucleus_distance is not None:
+            logger.info(
+                f"- Max transcript nucleus distance: {max_transcript_nucleus_distance}"
+            )
 
-        result = subprocess.run(
-            cmd, capture_output=True, text=True, check=False)
+        streamed_lines = []
+        process = subprocess.Popen(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            bufsize=1,
+        )
 
-        if result.returncode != 0:
-            logger.error(
-                f"Proseg failed with return code: {result.returncode}")
-            logger.error(f"Proseg stdout:{result.stdout}")
-            logger.error(f"Proseg stderr:{result.stderr}")
+        assert process.stdout is not None
+        for line in process.stdout:
+            line = line.rstrip()
+            if not line:
+                continue
+            streamed_lines.append(line)
+            # Show real-time progress in notebook/console and keep logger records.
+            print(f"[proseg] {line}", flush=True)
+            logger.info(f"[proseg] {line}")
+
+        return_code = process.wait()
+        if return_code != 0:
+            tail = "\n".join(streamed_lines[-100:])
+            logger.error(f"Proseg failed with return code: {return_code}")
+            if tail:
+                logger.error(f"Last Proseg output lines:\n{tail}")
             raise RuntimeError(
-                f"Proseg execution failed with return code {result.returncode}")
+                f"Proseg execution failed with return code {return_code}"
+            )
 
         logger.info("Proseg completed successfully!")
-
-        # Log output info
-        if result.stdout:
-            logger.debug(f"Proseg stdout:{result.stdout}")
 
     # Verify output exists
     if not output_path.exists():

@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import spatialdata as sd
 import anndata as ad
 import pandas as pd
+import multiprocessing as mp
 from collections import OrderedDict
 from spatialdata.models import Labels2DModel, ShapesModel
 import geopandas as gpd
@@ -16,6 +17,7 @@ from shapely.affinity import scale
 from shapely.geometry import Polygon
 import numpy as np
 from skimage.measure import label, regionprops, find_contours
+from scipy.ndimage import find_objects
 import tensorflow as tf
 import sys
 import os
@@ -27,8 +29,77 @@ import dask.array as da
 import scanpy as sc
 import seaborn as sns
 
+try:
+    from tqdm.auto import tqdm
+except ImportError:  # pragma: no cover - fallback when tqdm is unavailable
+    def tqdm(iterable, **kwargs):
+        return iterable
+
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '0'
+
+_POOL_SEG_MASKS = None
+_POOL_LABELED_MASKS = None
+
+
+def _polygon_from_bbox_with_mask(seg_masks, label_and_slice):
+    label_id, slc = label_and_slice
+    local_mask = (seg_masks[slc] == label_id)
+    if not local_mask.any():
+        return None
+
+    # Add a 1-pixel zero border so contours are not clipped by a tight bbox.
+    # Without this, many polygons become flattened/incomplete at bbox edges.
+    padded_mask = np.pad(local_mask.astype(np.uint8), pad_width=1, mode="constant", constant_values=0)
+    if padded_mask.shape[0] < 2 or padded_mask.shape[1] < 2:
+        return None
+
+    contours = find_contours(padded_mask, level=0.5)
+    if not contours:
+        return None
+
+    contour = max(contours, key=lambda x: len(x))
+    # Convert padded-local coordinates back to global image coordinates.
+    contour[:, 0] += slc[0].start - 1
+    contour[:, 1] += slc[1].start - 1
+
+    if not np.array_equal(contour[0], contour[-1]):
+        contour = np.vstack([contour, contour[0]])
+
+    poly = Polygon(contour[:, [1, 0]]).buffer(0)
+    if poly.is_valid and not poly.is_empty:
+        return poly
+    return None
+
+
+def _pool_init(seg_masks):
+    global _POOL_SEG_MASKS
+    _POOL_SEG_MASKS = seg_masks
+
+
+def _polygon_from_bbox_pool(label_and_slice):
+    return _polygon_from_bbox_with_mask(_POOL_SEG_MASKS, label_and_slice)
+
+
+def _region_stats_from_labeled_with_slice(labeled_masks, label_and_slice):
+    label_id, slc = label_and_slice
+    local_mask = (labeled_masks[slc] == label_id)
+    if not local_mask.any():
+        return None
+    props = regionprops(local_mask.astype(np.uint8))
+    if not props:
+        return None
+    region = props[0]
+    return (label_id, float(region.area), float(region.eccentricity))
+
+
+def _pool_init_labeled(labeled_masks):
+    global _POOL_LABELED_MASKS
+    _POOL_LABELED_MASKS = labeled_masks
+
+
+def _region_stats_pool(label_and_slice):
+    return _region_stats_from_labeled_with_slice(_POOL_LABELED_MASKS, label_and_slice)
 
 
 def check_gpu():
@@ -219,12 +290,20 @@ def run_cellpose_SAM(
     return masks, flows, styles
 
 
-def filter_cell_by_regionprops(seg_masks, max_eccentricity=0.95):
+def filter_cell_by_regionprops(
+    seg_masks,
+    max_eccentricity=0.95,
+    n_jobs=None,
+    show_progress=False,
+    min_area_percentile=10.0,
+    min_area_px=None,
+):
     """Filter segmented cell masks using region properties.
 
     This function processes a binary segmentation mask and removes objects 
     that do not meet certain shape criteria. Specifically, regions smaller 
-    than the median area or with eccentricity greater than the specified 
+    than an area threshold (derived from area percentile or an absolute
+    pixel threshold) or with eccentricity greater than the specified 
     threshold are excluded. The remaining regions are relabeled 
     sequentially in the cleaned mask.
 
@@ -234,37 +313,98 @@ def filter_cell_by_regionprops(seg_masks, max_eccentricity=0.95):
         max_eccentricity (float, optional): Maximum allowed eccentricity 
             of a region. Regions with higher eccentricity are discarded. 
             Defaults to 0.95.
+        n_jobs (int | None): Number of worker processes for computing region
+            statistics. If None, uses all available CPU cores.
+        show_progress (bool): If True, show tqdm progress while collecting
+            per-region statistics.
+        min_area_percentile (float): Percentile of region areas used to derive
+            the minimum accepted area threshold. Lower values are less
+            aggressive (keep more cells). Defaults to 10.0.
+        min_area_px (float | None): Absolute minimum area threshold in pixels.
+            If provided, overrides percentile-based threshold.
 
     Returns:
         numpy.ndarray: A cleaned segmentation mask with filtered and 
         sequentially relabeled regions. Same shape as `seg_masks`.
     """
 
-    labeled = label(seg_masks)
-    regions = regionprops(labeled)
-    # Early exit if no regions found
-    if not regions:
+    labeled_masks = label(seg_masks)
+    max_label = int(labeled_masks.max())
+    if max_label == 0:
         return np.zeros_like(seg_masks, dtype=np.int32)
 
-    # Computer the median area for dynamic min_area
-    areas = [r.area for r in regions]
-    min_area = np.median(areas)
-    cleaned_mask = np.zeros_like(seg_masks, dtype=np.int32)
-    current_label = 1
+    label_slices = [
+        (label_id, slc)
+        for label_id, slc in enumerate(find_objects(labeled_masks), start=1)
+        if slc is not None
+    ]
+    if not label_slices:
+        return np.zeros_like(seg_masks, dtype=np.int32)
 
-    for region in regions:
-        if region.area < min_area:
-            continue
-        if region.eccentricity > max_eccentricity:
-            continue
+    n_jobs = max(1, os.cpu_count() or 1) if n_jobs is None else max(1, int(n_jobs))
+    stats = []
 
-        cleaned_mask[labeled == region.label] = current_label
-        current_label += 1
+    use_parallel = n_jobs > 1 and len(label_slices) >= 64
+    if use_parallel:
+        try:
+            ctx = mp.get_context("fork")
+            with ctx.Pool(
+                processes=n_jobs,
+                initializer=_pool_init_labeled,
+                initargs=(labeled_masks,),
+            ) as pool:
+                results = pool.imap(_region_stats_pool, label_slices, chunksize=32)
+                if show_progress:
+                    results = tqdm(results, total=len(label_slices), desc="filter_masks_basic")
+                stats = [x for x in results if x is not None]
+        except Exception:
+            iterator = label_slices
+            if show_progress:
+                iterator = tqdm(iterator, total=len(label_slices), desc="filter_masks_basic")
+            stats = [
+                x for x in (
+                    _region_stats_from_labeled_with_slice(labeled_masks, item)
+                    for item in iterator
+                ) if x is not None
+            ]
+    else:
+        iterator = label_slices
+        if show_progress:
+            iterator = tqdm(iterator, total=len(label_slices), desc="filter_masks_basic")
+        stats = [
+            x for x in (
+                _region_stats_from_labeled_with_slice(labeled_masks, item)
+                for item in iterator
+            ) if x is not None
+        ]
 
+    if not stats:
+        return np.zeros_like(seg_masks, dtype=np.int32)
+
+    # Preserve original region-label order semantics.
+    stats.sort(key=lambda x: x[0])
+    areas = np.array([s[1] for s in stats], dtype=np.float64)
+    if min_area_px is not None:
+        min_area = float(min_area_px)
+    else:
+        area_pct = float(min_area_percentile)
+        area_pct = min(100.0, max(0.0, area_pct))
+        min_area = float(np.percentile(areas, area_pct))
+    keep_labels = np.array(
+        [s[0] for s in stats if s[1] >= min_area and s[2] <= max_eccentricity],
+        dtype=np.int32,
+    )
+
+    if keep_labels.size == 0:
+        return np.zeros_like(seg_masks, dtype=np.int32)
+
+    label_map = np.zeros(max_label + 1, dtype=np.int32)
+    label_map[keep_labels] = np.arange(1, keep_labels.size + 1, dtype=np.int32)
+    cleaned_mask = label_map[labeled_masks]
     return cleaned_mask
 
 
-def masks_to_polygons(seg_masks, factor_rescale=0):
+def masks_to_polygons(seg_masks, factor_rescale=0, n_jobs=None, show_progress=False):
     """Convert segmentation masks into scaled polygon representations.
 
     This function extracts object contours from a labeled segmentation 
@@ -276,7 +416,10 @@ def masks_to_polygons(seg_masks, factor_rescale=0):
     Args:
         seg_masks (numpy.ndarray): Labeled segmentation mask (2D array) 
             where each region has a unique integer label.
-    
+        n_jobs (int | None): Number of worker processes used for per-label
+            polygon extraction. If None, uses all available CPU cores.
+        show_progress (bool): If True, display a tqdm progress bar.
+
     Returns:
         list[shapely.geometry.Polygon]: A list of valid, non-empty polygons 
         representing the segmented objects. Polygons are upscaled if the 
@@ -290,23 +433,42 @@ def masks_to_polygons(seg_masks, factor_rescale=0):
    """
 
     upscale_polygons = []
+    label_slices = [
+        (label_id, slc)
+        for label_id, slc in enumerate(find_objects(seg_masks), start=1)
+        if slc is not None
+    ]
 
-    for region in regionprops(seg_masks):
-        mask = (seg_masks == region.label).astype(int)
-        contours = find_contours(np.array(mask))
-        if contours:
-            contour = max(contours, key=lambda x: len(x))
-
-            # ensure the contour is closed (first point = last point)
-            if not ((contour[0] == contour[-1]).all()):
-                contour = np.vstack([contour, contour[0]])
-            poly = Polygon(contour[:, [1, 0]]).buffer(0)
-
-            # only keep polygons that are valid and not empty
-            if poly.is_valid and not poly.is_empty:
+    # Parallelize contour extraction across labels (bbox-local work units).
+    n_jobs = max(1, os.cpu_count() or 1) if n_jobs is None else max(1, int(n_jobs))
+    use_parallel = len(label_slices) > 1 and n_jobs > 1
+    # Avoid parallel overhead for small label counts.
+    if use_parallel and len(label_slices) >= 64:
+        try:
+            ctx = mp.get_context("fork")
+            with ctx.Pool(processes=n_jobs, initializer=_pool_init, initargs=(seg_masks,)) as pool:
+                results = pool.imap(_polygon_from_bbox_pool, label_slices, chunksize=16)
+                if show_progress:
+                    results = tqdm(results, total=len(label_slices), desc="masks_to_polygons")
+                for poly in results:
+                    if poly is not None:
+                        upscale_polygons.append(poly)
+        except Exception:
+            iterator = label_slices
+            if show_progress:
+                iterator = tqdm(iterator, total=len(label_slices), desc="masks_to_polygons")
+            for item in iterator:
+                poly = _polygon_from_bbox_with_mask(seg_masks, item)
+                if poly is not None:
+                    upscale_polygons.append(poly)
+    else:
+        iterator = label_slices
+        if show_progress:
+            iterator = tqdm(iterator, total=len(label_slices), desc="masks_to_polygons")
+        for item in iterator:
+            poly = _polygon_from_bbox_with_mask(seg_masks, item)
+            if poly is not None:
                 upscale_polygons.append(poly)
-
-    h, w = seg_masks.shape
 
     if factor_rescale != 0:
         upscale_polygons = [scale(poly, xfact=factor_rescale, yfact=factor_rescale, origin=(
