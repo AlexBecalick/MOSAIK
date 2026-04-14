@@ -200,49 +200,26 @@ def merscope(
     if transcripts:
         transcript_path_csv = path / MerscopeKeys.TRANSCRIPTS_FILE_CSV
         transcript_path_parquet = path / MerscopeKeys.TRANSCRIPTS_FILE_PARQUET
-        
+
         if transcript_path_parquet.exists():
             try:
-                import pandas as pd
-                
-                # Load with pandas (more reliable for this)
                 table = pd.read_parquet(transcript_path_parquet, engine='pyarrow')
-                
-                # Ensure numeric types
-                table['global_x'] = pd.to_numeric(table['global_x'], errors='coerce')
-                table['global_y'] = pd.to_numeric(table['global_y'], errors='coerce')
-                table['global_z'] = pd.to_numeric(table['global_z'], errors='coerce')
-                
-                # Convert to dask AFTER ensuring types are correct
-                import dask.dataframe as dd
-                table = dd.from_pandas(table, npartitions=4)  # Adjust npartitions as needed
-                
-                parsed_points = PointsModel.parse(
-                    table,
-                    coordinates={
-                        "x": "global_x",
-                        "y": "global_y",
-                        "z": "global_z"
-                    },
-                    feature_key="gene",  # Or whatever your gene/feature column is called
-                    instance_key="cell_id",  # Or whatever your cell ID column is called
-                    transformations=transform,
-                    sort=True
-                )
-                
-                points[f"{dataset_id}_transcripts"] = parsed_points
-                
+                points[f"{dataset_id}_transcripts"] = _parse_transcript_table(table, transform)
             except Exception as e:
-                logger.warning(f"Failed to load parquet transcript file: {e}")
-                import traceback
-                traceback.print_exc()
-                                
-                        
-        elif transcript_path_parquet.exists():
+                logger.warning(f"Failed to load parquet transcript file: {e}. Trying CSV fallback.")
+                if transcript_path_csv.exists():
+                    try:
+                        csv_table = pd.read_csv(transcript_path_csv)
+                        points[f"{dataset_id}_transcripts"] = _parse_transcript_table(csv_table, transform)
+                    except Exception as e_csv:
+                        logger.warning(f"Failed to load csv transcript file: {e_csv}")
+                else:
+                    logger.warning(f"CSV fallback not found at {transcript_path_csv}")
+        elif transcript_path_csv.exists():
             try:
-                points[f"{dataset_id}_transcripts"] = _get_points(transcript_path_parquet, transform)
+                points[f"{dataset_id}_transcripts"] = _get_points(transcript_path_csv, transform)
             except Exception as e:
-                logger.warning(f"Failed to load parquet transcript file: {e}")
+                logger.warning(f"Failed to load csv transcript file: {e}")
         else:
             logger.warning(f"No transcript files found. Checked: {transcript_path_csv} and {transcript_path_parquet}")
 
@@ -278,6 +255,49 @@ def _get_reader(backend: str | None) -> Callable:  # type: ignore[type-arg]
         return _rioxarray_load_merscope
     except ModuleNotFoundError:
         return _dask_image_load_merscope
+
+
+def _parse_transcript_table(table: pd.DataFrame, transformations: dict[str, BaseTransformation]) -> dd.DataFrame:
+    """
+    Normalize transcript dataframe types and parse as a SpatialData points model.
+
+    This function is intentionally strict about coordinate dtypes because some
+    MERSCOPE exports (notably parquet) can carry integer extension dtypes that
+    SpatialData rejects for 3D point parsing.
+    """
+    if MerscopeKeys.GENE_KEY not in table.columns and "feature_name" in table.columns:
+        table = table.rename(columns={"feature_name": MerscopeKeys.GENE_KEY})
+
+    required = [MerscopeKeys.GLOBAL_X, MerscopeKeys.GLOBAL_Y, MerscopeKeys.GLOBAL_Z, MerscopeKeys.GENE_KEY]
+    missing = [col for col in required if col not in table.columns]
+    if missing:
+        raise ValueError(f"Transcript table is missing required columns: {missing}")
+
+    # Force coordinates to float to satisfy PointsModel dtype checks.
+    for col in (MerscopeKeys.GLOBAL_X, MerscopeKeys.GLOBAL_Y, MerscopeKeys.GLOBAL_Z):
+        table[col] = pd.to_numeric(table[col], errors="coerce").astype("float64")
+
+    table[MerscopeKeys.GENE_KEY] = table[MerscopeKeys.GENE_KEY].astype(str)
+    table = table.dropna(subset=[MerscopeKeys.GLOBAL_X, MerscopeKeys.GLOBAL_Y, MerscopeKeys.GLOBAL_Z, MerscopeKeys.GENE_KEY])
+
+    if MerscopeKeys.CELL_ID in table.columns:
+        table[MerscopeKeys.CELL_ID] = table[MerscopeKeys.CELL_ID].astype(str)
+
+    npartitions = max(1, min(16, len(table) // 1_000_000 + 1))
+    ddf = dd.from_pandas(table, npartitions=npartitions)
+
+    parse_kwargs = {
+        "coordinates": {"x": MerscopeKeys.GLOBAL_X, "y": MerscopeKeys.GLOBAL_Y, "z": MerscopeKeys.GLOBAL_Z},
+        "feature_key": MerscopeKeys.GENE_KEY,
+        "transformations": transformations,
+        "sort": True,
+    }
+    if MerscopeKeys.CELL_ID in ddf.columns:
+        parse_kwargs["instance_key"] = MerscopeKeys.CELL_ID
+
+    transcripts = PointsModel.parse(ddf, **parse_kwargs)
+    transcripts["gene"] = transcripts["gene"].astype("category")
+    return transcripts
 
 
 def _rioxarray_load_merscope(
@@ -338,15 +358,8 @@ def _dask_image_load_merscope(
 
 
 def _get_points(transcript_path: Path, transformations: dict[str, BaseTransformation]) -> dd.DataFrame:
-    transcript_df = dd.read_csv(transcript_path)
-    transcripts = PointsModel.parse(
-        transcript_df,
-        coordinates={"x": MerscopeKeys.GLOBAL_X, "y": MerscopeKeys.GLOBAL_Y, "z": MerscopeKeys.GLOBAL_Z},
-        transformations=transformations,
-        feature_key=MerscopeKeys.GENE_KEY,
-    )
-    transcripts["gene"] = transcripts["gene"].astype("category")
-    return transcripts
+    transcript_df = pd.read_csv(transcript_path)
+    return _parse_transcript_table(transcript_df, transformations)
 
 
 def _get_polygons(boundaries_path: Path, transformations: dict[str, BaseTransformation]) -> geopandas.GeoDataFrame:
