@@ -26,3 +26,11 @@ env/
 .vscode/
 .DS_Store
 Thumbs.db
+
+# Data
+*.zarr
+/notebooks/_roi_checkpoints/
+/notebooks/tmp_cellpose_sam_sweep/
+/notebooks/tmp_cellpose_sam_sweep_fine/
+/proseg_grid_sweep/
+/notebooks/*.png

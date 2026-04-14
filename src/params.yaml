@@ -21,7 +21,7 @@ merscope_qc:
 # -----------------------------------------------------------------------------
 resegmentation:
   # Path to the ProSeg executable (e.g. from cargo: ~/.cargo/bin/proseg)
-  proseg_binary: "/path/to/proseg"
+  proseg_binary: "/home/becalia/.cargo/bin/proseg"
   # CSV file with column 'gene_name' for Xenium/ProSeg gene ordering
   gene_list_path: "gene_list_10X.csv"
 
@@ -116,28 +116,29 @@ resegmentation_cosmx:
 # -----------------------------------------------------------------------------
 resegmentation_merscope:
   # Working directory (base path for inputs and outputs)
-  base_path: "/path/to/workspace"
+  base_path: "/media/mathieubo/SSD2/MerXen/P7513/MOSAIK_analysis"
   # Metadata CSV listing samples to process
-  metadata_path: "metadata_merscope.csv"
+  # For this dataset, create a one-row CSV where sample_id = region_R2_mosaik_patched
+  metadata_path: "metadata_merscope_single.csv"
   # Column name in metadata CSV that identifies each sample
   sample_id_column: "sample_id"
   # Optional tissue filter (set tissue_filter_value: null to disable)
   tissue_filter_column: "tissue_type"
   tissue_filter_value: null
   # Directory containing input zarr files named by zarr_name_pattern
-  zarr_dir: "raw_merscope"
+  zarr_dir: "."
   # Format string with {sample_name}
-  zarr_name_pattern: "raw_{sample_name}.zarr"
+  zarr_name_pattern: "{sample_name}.zarr"
   # Output folder name pattern
-  output_dir_pattern: "Segmentated_merscope_{sample_name}"
+  output_dir_pattern: "20260223_resegmented_{sample_name}"
   # MERSCOPE image selection
   # If null, the first matching image key with a _zN suffix is used.
-  image_key_prefix: null
+  image_key_prefix: "202509261108_P7513-2_VMSC19502_region_R2"
   # Inclusive z range for max projection
-  z_start: 2
-  z_end: 4
+  z_start: 1
+  z_end: 6
   # Optional channel subset; null means use all channels
-  channels_to_use: null
+  channels_to_use: ["DAPI", "PolyT"]
   # Cellpose/preprocessing parameters
   factor_rescale: 2
   preprocessed_image_output: "merscope_ready.png"
