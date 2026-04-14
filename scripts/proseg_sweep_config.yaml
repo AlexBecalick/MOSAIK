@@ -1,0 +1,41 @@
+# ProSeg parameter grid sweep configuration.
+# Run with: python scripts/proseg_grid_sweep.py scripts/proseg_sweep_config.yaml
+
+paths:
+  zarr_path: /media/mathieubo/SSD2/MerXen/P7513/MOSAIK_analysis/region_R2_mosaik_patched.zarr
+  proseg_binary: /home/becalia/.cargo/bin/proseg
+  checkpoint_dir: ./notebooks/_roi_checkpoints
+  output_dir: ./proseg_grid_sweep
+
+roi:
+  x_min: 5000.0
+  x_max: 6200.0
+  y_min: 3500.0
+  y_max: 4700.0
+  z_start: 0
+  z_end: 6
+  channels: [DAPI, PolyT]
+
+fixed_params:
+  samples: 1000
+  voxel_size: 0.5
+  burnin_voxel_size: 1.0
+  num_threads: 64
+
+sweep:
+  cell_compactness:
+    start: 0.03
+    stop: 0.11
+    step: 0.02
+  diffusion_probability:
+    start: 0.10
+    stop: 0.40
+    step: 0.05
+  nuclear_reassignment_prob:
+    start: 0.25
+    stop: 0.25
+    step: 0.05
+  diffusion_sigma_far:
+    start: 2
+    stop: 10
+    step: 2
