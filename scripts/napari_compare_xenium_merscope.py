@@ -255,9 +255,18 @@ class ComparisonViewerController:
             elapsed = time.time() - t0
             mem_after = memory_snapshot_gb()
 
+            image_summary = f"images={img_stats['layers']}"
+            if img_stats.get("skipped", False):
+                image_summary = "images=skipped"
+            elif img_stats.get("failed_keys", 0) > 0:
+                image_summary = (
+                    f"images={img_stats['layers']} "
+                    f"(failed_keys={img_stats['failed_keys']})"
+                )
+
             summary = (
                 f"{ds} loaded in {elapsed:.1f}s | "
-                f"images={img_stats['layers']} | "
+                f"{image_summary} | "
                 f"shape_layers={shape_stats['layers']} polygons={shape_stats['polygons']:,} | "
                 f"tx_total={tx_stats['total']:,} assigned={tx_stats['assigned']:,} "
                 f"unassigned={tx_stats['unassigned']:,} | "
@@ -271,40 +280,73 @@ class ComparisonViewerController:
             log.exception("[%s] Failed to load dataset", ds)
 
     def _add_image_layers(self, ds: str, sdata, x_transform, y_transform) -> dict[str, int]:
+        if getattr(self.args, "skip_images", False):
+            log.info("[%s] Image loading skipped (--skip-images).", ds)
+            return {"layers": 0, "failed_keys": 0, "skipped": True}
+
         visible = not self.args.hide_images
         total_layers = 0
+        failed_keys = 0
 
-        for image_key in list(sdata.images.keys()):
-            da = get_scale0_dataarray(sdata.images[image_key])
-            image_cyx = ensure_cyx(da)
-            labels = channel_labels(image_cyx)
+        try:
+            image_keys = list(sdata.images.keys())
+        except Exception as exc:
+            log.warning("[%s] Could not enumerate images; skipping image loading (%s)", ds, exc)
+            return {"layers": 0, "failed_keys": 0, "skipped": True}
 
-            x_coords = np.asarray(image_cyx.coords["x"].values) if "x" in image_cyx.coords else None
-            y_coords = np.asarray(image_cyx.coords["y"].values) if "y" in image_cyx.coords else None
-            affine = build_napari_affine_from_px_to_um(
-                x_transform=x_transform,
-                y_transform=y_transform,
-                x_coords=x_coords,
-                y_coords=y_coords,
-            )
+        if len(image_keys) == 0:
+            log.info("[%s] No images found in SpatialData; continuing without image layers.", ds)
+            return {"layers": 0, "failed_keys": 0, "skipped": True}
 
-            for chan_idx, chan_name in enumerate(labels):
-                layer_name = f"{ds} | image | {image_key} | {chan_name}"
-                ch_data = image_cyx.isel(c=chan_idx).data
-                cmap = image_colormap_for_channel(chan_name, chan_idx)
+        for image_key in image_keys:
+            try:
+                da = get_scale0_dataarray(sdata.images[image_key])
+                image_cyx = ensure_cyx(da)
+                labels = channel_labels(image_cyx)
 
-                self.viewer.add_image(
-                    ch_data,
-                    name=layer_name,
-                    affine=affine,
-                    colormap=cmap,
-                    blending="additive",
-                    opacity=self.args.image_opacity,
-                    visible=visible,
+                x_coords = (
+                    np.asarray(image_cyx.coords["x"].values)
+                    if "x" in image_cyx.coords
+                    else None
                 )
-                total_layers += 1
+                y_coords = (
+                    np.asarray(image_cyx.coords["y"].values)
+                    if "y" in image_cyx.coords
+                    else None
+                )
+                affine = build_napari_affine_from_px_to_um(
+                    x_transform=x_transform,
+                    y_transform=y_transform,
+                    x_coords=x_coords,
+                    y_coords=y_coords,
+                )
 
-        return {"layers": total_layers}
+                for chan_idx, chan_name in enumerate(labels):
+                    layer_name = f"{ds} | image | {image_key} | {chan_name}"
+                    ch_data = image_cyx.isel(c=chan_idx).data
+                    cmap = image_colormap_for_channel(chan_name, chan_idx)
+
+                    self.viewer.add_image(
+                        ch_data,
+                        name=layer_name,
+                        affine=affine,
+                        colormap=cmap,
+                        blending="additive",
+                        opacity=self.args.image_opacity,
+                        visible=visible,
+                    )
+                    total_layers += 1
+            except Exception as exc:
+                failed_keys += 1
+                log.warning(
+                    "[%s] Skipping image key '%s' due to load error (%s)",
+                    ds,
+                    image_key,
+                    exc,
+                )
+                continue
+
+        return {"layers": total_layers, "failed_keys": failed_keys, "skipped": False}
 
     def _add_shape_layers(self, ds: str, sdata) -> dict[str, int]:
         visible = not self.args.hide_shapes
@@ -483,6 +525,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--hide-images", action="store_true", help="Start with image layers hidden")
     parser.add_argument("--hide-shapes", action="store_true", help="Start with shape layers hidden")
     parser.add_argument("--hide-transcripts", action="store_true", help="Start with transcript layers hidden")
+    parser.add_argument(
+        "--skip-images",
+        action="store_true",
+        help="Do not attempt to load image layers (useful for image-less zarr transfers).",
+    )
 
     return parser.parse_args()
 
